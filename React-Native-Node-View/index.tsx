@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Animated, Text, ViewStyle, LayoutRectangle } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, Animated, Text, ViewStyle, LayoutRectangle, Dimensions } from 'react-native';
 import Svg, { Line, LineProps } from 'react-native-svg';
 import {
 	PanGestureHandler,
@@ -8,6 +8,8 @@ import {
 	GestureHandlerStateChangeNativeEvent,
 	LongPressGestureHandlerStateChangeEvent,
 	TapGestureHandlerStateChangeEvent,
+	PinchGestureHandler,
+	PinchGestureHandlerStateChangeEvent,
 	State,
 } from 'react-native-gesture-handler';
 
@@ -20,6 +22,15 @@ export interface Props {
 	lineStyle?: LineProps;
 	onDeleteNode?: (id: string, oldState: Array<NodeGroup>, newState: Array<NodeGroup>) => void;
 	onLongPress?: (id: string) => void;
+	maxZoom?: number;
+	minZoom?: number;
+	maxPan?: number;
+	minPan?: number;
+	enablePan?: boolean;
+	enableZoom?: boolean;
+	deleteNodeViewStyle?: ViewStyle;
+	deleteNodeLineStyle?: ViewStyle;
+	enableDeleteMode?: boolean;
 }
 
 interface NodeGroup {
@@ -60,7 +71,22 @@ const NodeItem = ({ title }: any) => {
 	);
 };
 
-const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle, onDeleteNode, onLongPress }) => {
+const NodeView: React.FC<Props> = ({
+	nodesGroups,
+	containerStyle,
+	lineStyle,
+	onDeleteNode,
+	onLongPress,
+	maxZoom = 1.5,
+	minZoom = 0.5,
+	maxPan = 100,
+	minPan = -100,
+	enablePan = false,
+	enableZoom = false,
+	deleteNodeViewStyle,
+	deleteNodeLineStyle,
+	enableDeleteMode = true,
+}) => {
 	const nodes = nodesGroups.map(nodeGroup => nodeGroup.nodes).flat();
 
 	const [viewLayout, setViewLayout] = useState<LayoutRectangle | null>(null);
@@ -74,6 +100,52 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle, onD
 	const [nodesLayout, setNodesLayout] = useState<any>({});
 
 	const [renderReady, setRenderReady] = useState(false);
+
+	const panGestureRef = useRef();
+	const pinchGestureRef = useRef();
+	const zoomBaseAnim = useRef(new Animated.Value(1)).current;
+	const zoomPinchAnim = useRef(new Animated.Value(1)).current;
+	const zoomAnim = Animated.multiply(zoomBaseAnim, zoomPinchAnim);
+	let lastScale = 1;
+
+	const zoomAnimInter = zoomAnim.interpolate({
+		inputRange: [minZoom, maxZoom],
+		outputRange: [minZoom, maxZoom],
+		extrapolate: 'clamp',
+	});
+
+	const graphTranslateX = useRef(new Animated.Value(0)).current;
+	const graphTranslateY = useRef(new Animated.Value(0)).current;
+
+	const graphTranslateXInter = graphTranslateX.interpolate({
+		inputRange: [minPan, maxPan],
+		outputRange: [minPan, maxPan],
+		extrapolate: 'clamp',
+	});
+
+	const graphTranslateYInter = graphTranslateY.interpolate({
+		inputRange: [minPan, maxPan],
+		outputRange: [minPan, maxPan],
+		extrapolate: 'clamp',
+	});
+
+	const onPinch = Animated.event([{ nativeEvent: { scale: zoomPinchAnim } }], { useNativeDriver: true });
+	const onPan = Animated.event([{ nativeEvent: { translationX: graphTranslateX, translationY: graphTranslateY } }], {
+		useNativeDriver: true,
+	});
+
+	const onPinchHandlerStateChange = (event: PinchGestureHandlerStateChangeEvent) => {
+		if (event.nativeEvent.oldState === State.ACTIVE) {
+			lastScale *= event.nativeEvent.scale;
+			zoomBaseAnim.setValue(lastScale);
+			zoomPinchAnim.setValue(1);
+		}
+	};
+
+	const onPanHandlerStateChange = useCallback(() => {
+		graphTranslateY.extractOffset();
+		graphTranslateX.extractOffset();
+	}, []);
 
 	useEffect(() => {
 		const tempNodePositions = [...nodePositions];
@@ -158,6 +230,9 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle, onD
 							setDeleteMode={setDeleteMode}
 							onDeleteNode={deleteNodeHandler}
 							onLongPressListener={onLongPress}
+							deleteNodeViewStyle={deleteNodeViewStyle}
+							deleteNodeLineStyle={deleteNodeLineStyle}
+							enableDeleteMode={enableDeleteMode}
 						/>
 					);
 				})}
@@ -198,14 +273,45 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle, onD
 	return (
 		<View onLayout={event => setViewLayout(event.nativeEvent.layout)} style={{ flex: 1 }}>
 			{viewLayout && renderReady ? (
-				<TapGestureHandler onHandlerStateChange={onGlobalTouch}>
-					<View style={[{ flex: 1 }, containerStyle]}>
-						{renderNodes}
-						<SvgAnim height={viewLayout?.height} width={viewLayout?.width} style={{ position: 'absolute', zIndex: -1 }}>
-							{renderLines}
-						</SvgAnim>
-					</View>
-				</TapGestureHandler>
+				<PinchGestureHandler
+					enabled={enableZoom}
+					minPointers={2}
+					ref={pinchGestureRef}
+					onHandlerStateChange={onPinchHandlerStateChange}
+					onGestureEvent={onPinch}>
+					<Animated.View style={{ flex: 1 }}>
+						<PanGestureHandler
+							enabled={enablePan}
+							minDist={10}
+							simultaneousHandlers={pinchGestureRef}
+							minPointers={2}
+							ref={panGestureRef}
+							onHandlerStateChange={onPanHandlerStateChange}
+							onGestureEvent={onPan}>
+							<Animated.View style={{ flex: 1 }}>
+								<TapGestureHandler onHandlerStateChange={onGlobalTouch}>
+									<Animated.View
+										style={[
+											{
+												flex: 1,
+												transform: [
+													{
+														scale: zoomAnimInter,
+													},
+													{ translateX: graphTranslateXInter },
+													{ translateY: graphTranslateYInter },
+												],
+											},
+											containerStyle,
+										]}>
+										{renderNodes}
+										<SvgAnim style={{ position: 'absolute', zIndex: -1 }}>{renderLines}</SvgAnim>
+									</Animated.View>
+								</TapGestureHandler>
+							</Animated.View>
+						</PanGestureHandler>
+					</Animated.View>
+				</PinchGestureHandler>
 			) : null}
 		</View>
 	);
@@ -291,6 +397,9 @@ interface IDragableView {
 	setDeleteMode: (flag: boolean) => void;
 	onDeleteNode: (id: string) => void;
 	onLongPressListener?: (id: string) => void;
+	deleteNodeViewStyle?: ViewStyle;
+	deleteNodeLineStyle?: ViewStyle;
+	enableDeleteMode: boolean;
 }
 
 const DragableView = ({
@@ -309,9 +418,12 @@ const DragableView = ({
 	onDeleteNode,
 	nodeLayout,
 	onLongPressListener,
+	deleteNodeViewStyle,
+	deleteNodeLineStyle,
+	enableDeleteMode,
 }: IDragableView) => {
 	const rotateAnim = useRef(new Animated.Value(0)).current;
-
+	const rotateAnimInter = rotateAnim.interpolate({ inputRange: [-0.04, 0.04], outputRange: ['-3deg', '3deg'] });
 	const onNodeLayout = (id: string, layout: LayoutRectangle, groupIndex: number) => {
 		onLayout(id, layout, groupIndex);
 	};
@@ -351,7 +463,7 @@ const DragableView = ({
 	};
 
 	const onLongPress = (event: LongPressGestureHandlerStateChangeEvent) => {
-		if (event.nativeEvent.state === State.ACTIVE) {
+		if (event.nativeEvent.state === State.ACTIVE && enableDeleteMode) {
 			setDeleteMode(!deleteMode);
 			onLongPressListener && onLongPressListener(id);
 		}
@@ -380,12 +492,18 @@ const DragableView = ({
 				<Animated.View
 					onLayout={event => onNodeLayout(id, event.nativeEvent.layout, groupIndex)}
 					style={{
-						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnim }],
+						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnimInter }],
 					}}>
 					<PanGestureHandler onGestureEvent={onDrag} onEnded={toStart}>
 						<Animated.View>{child ?? <NodeItem />}</Animated.View>
 					</PanGestureHandler>
-					<DeleteNodeButton deleteMode={deleteMode} onDeleteNode={onDeleteNode} nodeId={id} />
+					<DeleteNodeButton
+						viewStyle={deleteNodeViewStyle}
+						lineViewStyle={deleteNodeLineStyle}
+						deleteMode={deleteMode}
+						onDeleteNode={onDeleteNode}
+						nodeId={id}
+					/>
 				</Animated.View>
 			</TapGestureHandler>
 		</LongPressGestureHandler>
@@ -396,9 +514,11 @@ interface IDeleteNodeButton {
 	deleteMode: boolean;
 	onDeleteNode: (id: string) => void;
 	nodeId: string;
+	viewStyle?: ViewStyle;
+	lineViewStyle?: ViewStyle;
 }
 
-const DeleteNodeButton = ({ deleteMode, onDeleteNode, nodeId }: IDeleteNodeButton) => {
+const DeleteNodeButton = ({ deleteMode, onDeleteNode, nodeId, viewStyle, lineViewStyle }: IDeleteNodeButton) => {
 	const position = -5;
 	const scaleAnim = useRef(new Animated.Value(0)).current;
 	useEffect(() => {
@@ -439,8 +559,9 @@ const DeleteNodeButton = ({ deleteMode, onDeleteNode, nodeId }: IDeleteNodeButto
 					transform: [{ scale: scaleAnim }],
 					alignItems: 'center',
 					justifyContent: 'center',
+					...viewStyle,
 				}}>
-				<View style={{ width: '60%', height: 2, backgroundColor: '#40464d', borderRadius: 10 }} />
+				<View style={{ width: '60%', height: 2, backgroundColor: '#40464d', borderRadius: 10, ...lineViewStyle }} />
 			</Animated.View>
 		</TapGestureHandler>
 	);

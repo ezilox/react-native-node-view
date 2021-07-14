@@ -1,0 +1,31 @@
+{
+  "name": "react-native-node-view",
+  "version": "1.0.4",
+  "description": "Very simple way to draw node graph",
+  "main": "index.tsx",
+  "peerDependencies": {
+    "react-native-gesture-handler": "~1.10.2",
+    "react-native-svg": "12.1.1"
+  },
+  "keywords": [
+    "react-native",
+    "graph",
+    "node",
+    "node view",
+    "expo",
+    "mobile",
+    "ios",
+    "android",
+    "view",
+    "animated"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ezilox/react-native-node-view"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tamir Hizmi",
+  "license": "ISC"
+}
