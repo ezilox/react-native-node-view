@@ -4,7 +4,10 @@ import Svg, { Line, LineProps } from 'react-native-svg';
 import {
 	PanGestureHandler,
 	TapGestureHandler,
+	LongPressGestureHandler,
 	GestureHandlerStateChangeNativeEvent,
+	LongPressGestureHandlerStateChangeEvent,
+	TapGestureHandlerStateChangeEvent,
 	State,
 } from 'react-native-gesture-handler';
 
@@ -15,6 +18,8 @@ export interface Props {
 	nodesGroups: Array<NodeGroup>;
 	containerStyle?: ViewStyle;
 	lineStyle?: LineProps;
+	onDeleteNode?: (id: string, oldState: Array<NodeGroup>, newState: Array<NodeGroup>) => void;
+	onLongPress?: (id: string) => void;
 }
 
 interface NodeGroup {
@@ -43,10 +48,10 @@ const NodeItem = ({ title }: any) => {
 	return (
 		<View
 			style={{
-				width: 40,
-				height: 40,
+				width: 50,
+				height: 50,
 				backgroundColor: 'lightgray',
-				borderRadius: 40 / 2,
+				borderRadius: 30 / 2,
 				alignItems: 'center',
 				justifyContent: 'center',
 			}}>
@@ -55,40 +60,45 @@ const NodeItem = ({ title }: any) => {
 	);
 };
 
-const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle }) => {
+const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle, onDeleteNode, onLongPress }) => {
 	const nodes = nodesGroups.map(nodeGroup => nodeGroup.nodes).flat();
 
 	const [viewLayout, setViewLayout] = useState<LayoutRectangle | null>(null);
+	const [nodePositions, setNodePositions] = useState<Array<INodePositions>>([]);
+	const [nodeOnDrag, setNodeOnDrag] = useState<Array<() => void>>([]);
+	const [toStart, setToStart] = useState<Array<() => void>>([]);
+	const [deleteMode, setDeleteMode] = useState(false);
 
 	const positionPadding = viewLayout && viewLayout?.height / nodesGroups.length;
 
-	const nodesData = {
-		nodePositions: useRef<Array<INodePositions>>([]).current,
-		nodeOnDrag: useRef<Array<() => void>>([]).current,
-		toStart: useRef<Array<() => void>>([]).current,
-	};
 	const [nodesLayout, setNodesLayout] = useState<any>({});
 
 	const [renderReady, setRenderReady] = useState(false);
 
 	useEffect(() => {
+		const tempNodePositions = [...nodePositions];
+		const tempNodeOnDrag = [...nodeOnDrag];
+		const tempToStart = [...toStart];
+
 		nodes.forEach(() => {
 			const animated = { x: new Animated.Value(0), y: new Animated.Value(0) };
-			nodesData.nodePositions.push(animated);
+			tempNodePositions.push(animated);
 			const toStart = () => {
 				Animated.parallel([
 					Animated.spring(animated.x, { useNativeDriver: true, speed: 6, toValue: 0 }),
 					Animated.spring(animated.y, { useNativeDriver: true, speed: 6, toValue: 0 }),
 				]).start();
 			};
-			nodesData.toStart.push(toStart);
-			nodesData.nodeOnDrag.push(
+			tempToStart.push(toStart);
+			tempNodeOnDrag.push(
 				Animated.event([{ nativeEvent: { translationY: animated.y, translationX: animated.x } }], {
 					useNativeDriver: true,
 				})
 			);
-			nodesData.toStart.push();
 		});
+		setNodePositions(tempNodePositions);
+		setNodeOnDrag(tempNodeOnDrag);
+		setToStart(tempToStart);
 		setRenderReady(true);
 	}, []);
 
@@ -98,6 +108,24 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle }) =
 
 		tempData[id].y = positionPadding && tempData[id].y + groupIndex * positionPadding;
 		setNodesLayout(tempData);
+	};
+
+	const onGlobalTouch = (event: TapGestureHandlerStateChangeEvent) => {
+		if (event.nativeEvent.state === State.ACTIVE) {
+			setDeleteMode(false);
+		}
+	};
+
+	const deleteNodeHandler = (id: string) => {
+		const newNodesGroups = [...nodesGroups];
+		newNodesGroups.forEach(nodeGroup => {
+			nodeGroup.nodes = nodeGroup.nodes.filter(node => node.id !== id);
+		});
+
+		const tempNodeLayout = { ...nodesLayout };
+		delete tempNodeLayout[id];
+		setNodesLayout(tempNodeLayout);
+		onDeleteNode && onDeleteNode(id, nodesGroups, newNodesGroups);
 	};
 
 	const renderNodes =
@@ -118,14 +146,18 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle }) =
 							key={node.id}
 							onLayout={onLayout}
 							child={node.child}
-							onDrag={nodesData.nodeOnDrag[nodeIndex]}
-							toStart={nodesData.toStart[nodeIndex]}
-							viewPositionX={nodesData.nodePositions[nodeIndex].x}
-							viewPositionY={nodesData.nodePositions[nodeIndex].y}
+							onDrag={nodeOnDrag[nodeIndex]}
+							toStart={toStart[nodeIndex]}
+							viewPositionX={nodePositions[nodeIndex].x}
+							viewPositionY={nodePositions[nodeIndex].y}
 							groupIndex={groupIndex}
 							viewLayout={viewLayout}
-              nodeLayout={nodesLayout[nodeIndex]}
-              onPress={node.onPress}
+							nodeLayout={nodesLayout[node.id]}
+							onPress={node.onPress}
+							deleteMode={deleteMode}
+							setDeleteMode={setDeleteMode}
+							onDeleteNode={deleteNodeHandler}
+							onLongPressListener={onLongPress}
 						/>
 					);
 				})}
@@ -142,20 +174,23 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle }) =
 					const nodeLayout = nodesLayout[node.id];
 					const secNodeLayout = nodesLayout[lineTo];
 					const secNodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === lineTo);
-
-					return (
-						<DragableLine
-							key={`${node.lineTo}${secNodeIndex}`}
-							viewPositionX1={nodesData.nodePositions[index].x}
-							viewPositionY1={nodesData.nodePositions[index].y}
-							viewPositionX2={nodesData.nodePositions[secNodeIndex].x}
-							viewPositionY2={nodesData.nodePositions[secNodeIndex].y}
-							nodeLayout={nodeLayout}
-							secNodeLayout={secNodeLayout}
-							lineProps={{ stroke: 'blue', strokeWidth: '1', ...lineStyle }}
-							viewLayout={viewLayout}
-						/>
-					);
+					if (nodePositions[secNodeIndex]) {
+						return (
+							<DragableLine
+								key={`${node.lineTo}${secNodeIndex}`}
+								viewPositionX1={nodePositions[index].x}
+								viewPositionY1={nodePositions[index].y}
+								viewPositionX2={nodePositions[secNodeIndex].x}
+								viewPositionY2={nodePositions[secNodeIndex].y}
+								nodeLayout={nodeLayout}
+								secNodeLayout={secNodeLayout}
+								lineProps={{ stroke: 'blue', strokeWidth: '1', ...lineStyle }}
+								viewLayout={viewLayout}
+							/>
+						);
+					} else {
+						return null;
+					}
 				});
 			}
 		});
@@ -163,12 +198,14 @@ const NodeView: React.FC<Props> = ({ nodesGroups, containerStyle, lineStyle }) =
 	return (
 		<View onLayout={event => setViewLayout(event.nativeEvent.layout)} style={{ flex: 1 }}>
 			{viewLayout && renderReady ? (
-				<View style={[{ flex: 1 }, containerStyle]}>
-					{renderNodes}
-					<SvgAnim height={viewLayout?.height} width={viewLayout?.width} style={{ position: 'absolute', zIndex: -1 }}>
-						{renderLines}
-					</SvgAnim>
-				</View>
+				<TapGestureHandler onHandlerStateChange={onGlobalTouch}>
+					<View style={[{ flex: 1 }, containerStyle]}>
+						{renderNodes}
+						<SvgAnim height={viewLayout?.height} width={viewLayout?.width} style={{ position: 'absolute', zIndex: -1 }}>
+							{renderLines}
+						</SvgAnim>
+					</View>
+				</TapGestureHandler>
 			) : null}
 		</View>
 	);
@@ -250,6 +287,10 @@ interface IDragableView {
 	onPress?: (id: string) => void;
 	viewLayout: LayoutRectangle | null;
 	nodeLayout: LayoutRectangle;
+	deleteMode: boolean;
+	setDeleteMode: (flag: boolean) => void;
+	onDeleteNode: (id: string) => void;
+	onLongPressListener?: (id: string) => void;
 }
 
 const DragableView = ({
@@ -263,16 +304,57 @@ const DragableView = ({
 	groupIndex,
 	viewLayout,
 	onPress,
+	deleteMode,
+	setDeleteMode,
+	onDeleteNode,
+	nodeLayout,
+	onLongPressListener,
 }: IDragableView) => {
-	const [nodeLayout, setNodeLayout] = useState<LayoutRectangle>();
+	const rotateAnim = useRef(new Animated.Value(0)).current;
 
 	const onNodeLayout = (id: string, layout: LayoutRectangle, groupIndex: number) => {
-		!nodeLayout && setNodeLayout(layout);
 		onLayout(id, layout, groupIndex);
 	};
 
 	const onTap = (nativeEvent: GestureHandlerStateChangeNativeEvent) => {
-		nativeEvent.state === State.END && onPress && onPress(id);
+		nativeEvent.state === State.ACTIVE && onPress && onPress(id);
+	};
+
+	useEffect(() => {
+		startRotate(deleteMode);
+	}, [deleteMode]);
+
+	const startRotate = (startFlag: boolean) => {
+		const animation = Animated.loop(
+			Animated.sequence([
+				Animated.timing(rotateAnim, {
+					toValue: 0.04,
+					duration: 100,
+					useNativeDriver: true,
+				}),
+				Animated.timing(rotateAnim, {
+					toValue: -0.04,
+					duration: 100,
+					useNativeDriver: true,
+				}),
+			])
+		);
+		startFlag ? animation.start() : endRotate();
+	};
+
+	const endRotate = () => {
+		Animated.timing(rotateAnim, {
+			toValue: 0,
+			duration: 100,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const onLongPress = (event: LongPressGestureHandlerStateChangeEvent) => {
+		if (event.nativeEvent.state === State.ACTIVE) {
+			setDeleteMode(!deleteMode);
+			onLongPressListener && onLongPressListener(id);
+		}
 	};
 
 	const maxTranslateX =
@@ -293,13 +375,72 @@ const DragableView = ({
 			: 0;
 
 	return (
+		<LongPressGestureHandler minDurationMs={800} onHandlerStateChange={onLongPress}>
+			<TapGestureHandler onHandlerStateChange={event => onTap(event.nativeEvent)}>
+				<Animated.View
+					onLayout={event => onNodeLayout(id, event.nativeEvent.layout, groupIndex)}
+					style={{
+						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnim }],
+					}}>
+					<PanGestureHandler onGestureEvent={onDrag} onEnded={toStart}>
+						<Animated.View>{child ?? <NodeItem />}</Animated.View>
+					</PanGestureHandler>
+					<DeleteNodeButton deleteMode={deleteMode} onDeleteNode={onDeleteNode} nodeId={id} />
+				</Animated.View>
+			</TapGestureHandler>
+		</LongPressGestureHandler>
+	);
+};
+
+interface IDeleteNodeButton {
+	deleteMode: boolean;
+	onDeleteNode: (id: string) => void;
+	nodeId: string;
+}
+
+const DeleteNodeButton = ({ deleteMode, onDeleteNode, nodeId }: IDeleteNodeButton) => {
+	const position = -5;
+	const scaleAnim = useRef(new Animated.Value(0)).current;
+	useEffect(() => {
+		deleteMode ? scaleUp() : scaleDown();
+	}, [deleteMode]);
+
+	const scaleUp = () => {
+		Animated.spring(scaleAnim, {
+			toValue: 1,
+			bounciness: 20,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const scaleDown = () => {
+		Animated.spring(scaleAnim, {
+			toValue: 0,
+			bounciness: 5,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const onTap = (nativeEvent: GestureHandlerStateChangeNativeEvent) => {
+		nativeEvent.state === State.ACTIVE && onDeleteNode(nodeId);
+	};
+
+	return (
 		<TapGestureHandler onHandlerStateChange={event => onTap(event.nativeEvent)}>
 			<Animated.View
-				onLayout={event => onNodeLayout(id, event.nativeEvent.layout, groupIndex)}
-				style={{ transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }] }}>
-				<PanGestureHandler onGestureEvent={onDrag} onEnded={toStart}>
-					<Animated.View>{child ?? <NodeItem />}</Animated.View>
-				</PanGestureHandler>
+				style={{
+					height: 20,
+					width: 20,
+					borderRadius: 20 / 2,
+					backgroundColor: '#ebeef2',
+					position: 'absolute',
+					left: position,
+					top: position,
+					transform: [{ scale: scaleAnim }],
+					alignItems: 'center',
+					justifyContent: 'center',
+				}}>
+				<View style={{ width: '60%', height: 2, backgroundColor: '#40464d', borderRadius: 10 }} />
 			</Animated.View>
 		</TapGestureHandler>
 	);
