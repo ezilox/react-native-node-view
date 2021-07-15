@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, LayoutAnimation } from 'react-native';
+import { StyleSheet, Text, View, LayoutAnimation, Alert } from 'react-native';
 import NodeView from './React-Native-Node-View/index';
 
 export default function App() {
@@ -54,15 +54,26 @@ export default function App() {
 		<View
 			style={{
 				flex: 1,
-				justifyContent: 'center',
 				backgroundColor: 'white',
 			}}>
 			<NodeView
-				enablePan={true}
-				enableZoom={true}
-				containerStyle={{ borderWidth: 0 }}
-				onDeleteNode={(id, oldState, newState) => setNodesGroups(newState)}
 				nodesGroups={nodesGroups}
+				onDeleteNode={(id, old, newState) =>
+					Alert.alert('Alert Title', 'My Alert Msg', [
+						{
+							text: 'Cancel',
+
+							style: 'cancel',
+						},
+						{
+							text: 'OK',
+							onPress: () => {
+                console.log("deleteing,", id);
+								setNodesGroups(newState);
+							},
+						},
+					])
+				}
 			/>
 		</View>
 	);
@@ -71,7 +82,6 @@ export default function App() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: 'center',
 		backgroundColor: 'white',
 	},
 });

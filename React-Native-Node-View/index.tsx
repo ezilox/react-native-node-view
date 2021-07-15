@@ -174,6 +174,18 @@ const NodeView: React.FC<Props> = ({
 		setRenderReady(true);
 	}, []);
 
+	useEffect(() => {
+		const nodesIds = nodes.map(node => node.id);
+
+		Object.keys(nodesLayout).forEach(key => {
+			if (!nodesIds.includes(key)) {
+				const tempNodeLayout = { ...nodesLayout };
+				delete tempNodeLayout[key];
+				setNodesLayout(tempNodeLayout);
+			}
+		});
+	}, [nodesGroups]);
+
 	const onLayout = (id: string, layout: LayoutRectangle, groupIndex: number) => {
 		const tempData = { ...nodesLayout };
 		tempData[id] = layout;
@@ -189,14 +201,10 @@ const NodeView: React.FC<Props> = ({
 	};
 
 	const deleteNodeHandler = (id: string) => {
-		const newNodesGroups = [...nodesGroups];
+		const newNodesGroups = nodesGroups.map(nodeGroup => ({ ...nodeGroup }));
 		newNodesGroups.forEach(nodeGroup => {
 			nodeGroup.nodes = nodeGroup.nodes.filter(node => node.id !== id);
 		});
-
-		const tempNodeLayout = { ...nodesLayout };
-		delete tempNodeLayout[id];
-		setNodesLayout(tempNodeLayout);
 		onDeleteNode && onDeleteNode(id, nodesGroups, newNodesGroups);
 	};
 
@@ -240,7 +248,6 @@ const NodeView: React.FC<Props> = ({
 		));
 
 	const renderLines =
-		Object.keys(nodesLayout).length === nodes.length &&
 		viewLayout &&
 		renderReady &&
 		nodes.map((node, index) => {
@@ -249,7 +256,7 @@ const NodeView: React.FC<Props> = ({
 					const nodeLayout = nodesLayout[node.id];
 					const secNodeLayout = nodesLayout[lineTo];
 					const secNodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === lineTo);
-					if (nodePositions[secNodeIndex]) {
+					if (nodePositions[secNodeIndex] && nodeLayout && secNodeLayout) {
 						return (
 							<DragableLine
 								key={`${node.lineTo}${secNodeIndex}`}
