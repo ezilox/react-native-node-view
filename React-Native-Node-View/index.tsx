@@ -256,7 +256,7 @@ const NodeView: React.FC<Props> = ({
 					const nodeLayout = nodesLayout[node.id];
 					const secNodeLayout = nodesLayout[lineTo];
 					const secNodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === lineTo);
-					if (nodePositions[secNodeIndex] && nodeLayout && secNodeLayout) {
+					if (nodePositions[secNodeIndex] && nodePositions[index] && nodeLayout && secNodeLayout) {
 						return (
 							<DragableLine
 								key={`${node.lineTo}${secNodeIndex}`}
