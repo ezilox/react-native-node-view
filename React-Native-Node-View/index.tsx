@@ -148,9 +148,9 @@ const NodeView: React.FC<Props> = ({
 	}, []);
 
 	useEffect(() => {
-		const tempNodePositions = [...nodePositions];
-		const tempNodeOnDrag = [...nodeOnDrag];
-		const tempToStart = [...toStart];
+		const tempNodePositions: React.SetStateAction<INodePositions[]> = [];
+		const tempNodeOnDrag: React.SetStateAction<(() => void)[]> = [];
+		const tempToStart: React.SetStateAction<(() => void)[]> = [];
 
 		nodes.forEach(() => {
 			const animated = { x: new Animated.Value(0), y: new Animated.Value(0) };
@@ -172,7 +172,7 @@ const NodeView: React.FC<Props> = ({
 		setNodeOnDrag(tempNodeOnDrag);
 		setToStart(tempToStart);
 		setRenderReady(true);
-	}, []);
+	}, [nodesGroups]);
 
 	useEffect(() => {
 		const nodesIds = nodes.map(node => node.id);
@@ -220,7 +220,7 @@ const NodeView: React.FC<Props> = ({
 				{nodesMap.nodes.map((node, index) => {
 					const nodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === node.id);
 
-					return (
+					return nodePositions[nodeIndex] ? (
 						<DragableView
 							id={node.id}
 							key={node.id}
@@ -242,7 +242,7 @@ const NodeView: React.FC<Props> = ({
 							deleteNodeLineStyle={deleteNodeLineStyle}
 							enableDeleteMode={enableDeleteMode}
 						/>
-					);
+					) : null;
 				})}
 			</View>
 		));

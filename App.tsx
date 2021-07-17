@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, LayoutAnimation, Alert } from 'react-native';
+import { StyleSheet, Text, View, Button, Alert } from 'react-native';
 import NodeView from './React-Native-Node-View/index';
 
 export default function App() {
@@ -50,6 +50,13 @@ export default function App() {
 		},
 	]);
 
+	const onPressAdd = () => {
+    const tempNodes = Array.from(nodesGroups.map(group => ({ ...group })));
+    tempNodes[1].nodes.push({id: `${Math.random()}`, lineTo: ['1'], onPress: () => null})
+    
+    setNodesGroups(tempNodes);
+	};
+
 	return (
 		<View
 			style={{
@@ -68,13 +75,14 @@ export default function App() {
 						{
 							text: 'OK',
 							onPress: () => {
-                console.log("deleteing,", id);
 								setNodesGroups(newState);
 							},
 						},
 					])
 				}
 			/>
+      <View style={{marginBottom: 50}}><Button  title="Add" onPress={onPressAdd}/></View>
+      
 		</View>
 	);
 }
