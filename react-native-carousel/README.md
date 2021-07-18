@@ -1,9 +1,7 @@
 # Screenshots
 
 <p float="left">
-  <img title="asdadasda" alt="#dada" src="https://github.com/ezilox/react-native-node-view/raw/main/docs/my_node_graph.gif" width="207" height="448" />
-  <img title="asdadasda" alt="#dada" src="https://github.com/ezilox/react-native-node-view/raw/main/docs/my_little_node_graph.gif" width="207" height="448" />
-  <img title="asdadasda" alt="#dada" src="https://github.com/ezilox/react-native-node-view/raw/main/docs/Simulator%20Screen%20Recording%20-%20iPhone%2011%20-%202021-07-14%20at%2021.25.12%20(1).gif" width="207" height="448" />
+  <img title="asdadasda" alt="#dada" src="https://github.com/ezilox/react-native-node-view/raw/main/docs/react-native-carousel-cards.gif" width="207" height="448" />
 </p>
 
 # How To Use
