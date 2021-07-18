@@ -9,13 +9,13 @@
 Install
 
 ```console
-npm i react-native-card-carousel
+npm i react-native-card-carousel-animated
 ```
 
 Import
 
 ```jsx
-import Carousel from 'react-native-card-carousel';
+import Carousel from 'react-native-card-carousel-animated';
 ```
 
 ## Examples
