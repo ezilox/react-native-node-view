@@ -1,0 +1,26 @@
+{
+  "name": "react-native-carousel",
+  "version": "1.0.0",
+  "description": "Simple text carousel",
+  "main": "index.tsx",
+  "keywords": [
+    "react-native",
+    "carousel",
+    "carousel view",
+    "expo",
+    "mobile",
+    "ios",
+    "android",
+    "view",
+    "animated"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ezilox/react-native-node-view"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tamir Hizmi",
+  "license": "ISC"
+}
