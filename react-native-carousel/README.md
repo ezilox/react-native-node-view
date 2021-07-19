@@ -74,9 +74,10 @@ export default function App() {
 
 ## carousel Object
 
-| Prop Name | Description          | Type         | required |
-| --------- | -------------------- | ------------ | -------- |
-| cards     | List of card objects | Array <Card> | true     |
+| Prop Name | Description                   | Type         | required |
+| --------- | ----------------------------- | ------------ | -------- |
+| cards     | List of card objects          | Array <Card> | true     |
+| rtlFlag   | Revert side for rtl languages | boolean      | false    |
 
 ## Card Object
 

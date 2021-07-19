@@ -9,15 +9,13 @@ import {
 	NativeScrollEvent,
 	NativeSyntheticEvent,
 	Pressable,
-	I18nManager,
 	LayoutRectangle,
 	TextStyle,
 } from 'react-native';
 
-const isRtl = I18nManager.isRTL;
-
 export interface Props {
 	cards: Array<ICard>;
+	rtlFlag?: boolean;
 }
 
 interface ICard {
@@ -29,7 +27,7 @@ interface ICard {
 	subtitleStyle?: TextStyle;
 }
 
-const Carousel: React.FC<Props> = ({ cards }) => {
+const Carousel: React.FC<Props> = ({ cards, rtlFlag = false }) => {
 	const offsetX = useRef(new Animated.Value(0)).current;
 	const flatListRef: MutableRefObject<any> = useRef();
 	const flatListChildRef: MutableRefObject<any> = useRef();
@@ -46,11 +44,11 @@ const Carousel: React.FC<Props> = ({ cards }) => {
 	const renderItem: ListRenderItem<any> = ({ item, index }) =>
 		itemSize ? (
 			<Item
-				index={isRtl ? revertIndex(index) : index}
+				index={rtlFlag ? revertIndex(index) : index}
 				title={item.title}
 				subtitle={item.subtitle}
 				offsexX={offsetX}
-				center={() => scrollToIndex(isRtl ? revertIndex(index) : index)}
+				center={() => scrollToIndex(rtlFlag ? revertIndex(index) : index)}
 				itemSize={itemSize}
 				titleStyle={item.titleStyle}
 				subtitleStyle={item.subtitleStyle}

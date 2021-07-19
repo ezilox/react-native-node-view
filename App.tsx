@@ -44,7 +44,7 @@ export default function App() {
 				backgroundColor: 'white',
 			}}>
 			<View style={{ height: 50 }}></View>
-			<Carousel cards={data} />
+			<Carousel rtlFlag cards={data} />
 		</View>
 	);
 }
