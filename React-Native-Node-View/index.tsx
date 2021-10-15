@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { View, Animated, Text, ViewStyle, LayoutRectangle, Dimensions } from 'react-native';
+import { View, Animated, Text, ViewStyle, LayoutRectangle, Platform } from 'react-native';
 import Svg, { Line, LineProps } from 'react-native-svg';
 import {
 	PanGestureHandler,
@@ -13,7 +13,7 @@ import {
 	State,
 } from 'react-native-gesture-handler';
 
-const SvgAnim = Animated.createAnimatedComponent(Svg);
+// const SvgAnim = Animated.createAnimatedComponent(Svg);
 const LineAnim = Animated.createAnimatedComponent(Line);
 
 export interface Props {
@@ -98,6 +98,7 @@ const NodeView: React.FC<Props> = ({
 	const positionPadding = viewLayout && viewLayout?.height / nodesGroups.length;
 
 	const [nodesLayout, setNodesLayout] = useState<any>({});
+	const nodesRef = useRef({ value: {} }).current;
 
 	const [renderReady, setRenderReady] = useState(false);
 
@@ -148,6 +149,7 @@ const NodeView: React.FC<Props> = ({
 	}, []);
 
 	useEffect(() => {
+		setRenderReady(false);
 		const tempNodePositions: React.SetStateAction<INodePositions[]> = [];
 		const tempNodeOnDrag: React.SetStateAction<(() => void)[]> = [];
 		const tempToStart: React.SetStateAction<(() => void)[]> = [];
@@ -171,7 +173,11 @@ const NodeView: React.FC<Props> = ({
 		setNodePositions(tempNodePositions);
 		setNodeOnDrag(tempNodeOnDrag);
 		setToStart(tempToStart);
-		setRenderReady(true);
+		if (Platform.OS === 'web') {
+			setTimeout(() => setRenderReady(true), 10);
+		} else {
+			setRenderReady(true);
+		}
 	}, [nodesGroups]);
 
 	useEffect(() => {
@@ -187,10 +193,11 @@ const NodeView: React.FC<Props> = ({
 	}, [nodesGroups]);
 
 	const onLayout = (id: string, layout: LayoutRectangle, groupIndex: number) => {
-		const tempData = { ...nodesLayout };
+		const tempData = { ...nodesLayout, ...nodesRef.value };
 		tempData[id] = layout;
 
 		tempData[id].y = positionPadding && tempData[id].y + groupIndex * positionPadding;
+		nodesRef.value = { ...nodesRef.value, ...tempData };
 		setNodesLayout(tempData);
 	};
 
@@ -312,7 +319,7 @@ const NodeView: React.FC<Props> = ({
 											containerStyle,
 										]}>
 										{renderNodes}
-										<SvgAnim style={{ position: 'absolute', zIndex: -1 }}>{renderLines}</SvgAnim>
+										<Svg style={{ position: 'absolute', zIndex: -1, width: '100%', height: '100%' }}>{renderLines}</Svg>
 									</Animated.View>
 								</TapGestureHandler>
 							</Animated.View>
