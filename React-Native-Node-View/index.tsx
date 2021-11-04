@@ -38,6 +38,11 @@ interface NodeGroup {
 	rowContainerStyle?: ViewStyle;
 }
 
+interface NodeSize {
+	width: number;
+	height: number;
+}
+
 interface Node {
 	id: string;
 	lineTo?: Array<string>;
@@ -55,12 +60,12 @@ interface INodePositions {
 	y: Animated.Value;
 }
 
-const NodeItem = ({ title }: any) => {
+const NodeItem = ({ title, adjustSize }: any) => {
 	return (
 		<View
 			style={{
-				width: 50,
-				height: 50,
+				width: adjustSize?.width ?? 50,
+				height: adjustSize?.height ?? 50,
 				backgroundColor: 'lightgray',
 				borderRadius: 30 / 2,
 				alignItems: 'center',
@@ -226,6 +231,11 @@ const NodeView: React.FC<Props> = ({
 				key={groupIndex}>
 				{nodesMap.nodes.map((node, index) => {
 					const nodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === node.id);
+					let nodeNewSize = null;
+					if (viewLayout && viewLayout?.width / nodesMap.nodes.length < 55) {
+						const size = viewLayout?.width / nodesMap.nodes.length - 2;
+						nodeNewSize = { width: size, height: size };
+					}
 
 					return nodePositions[nodeIndex] ? (
 						<DragableView
@@ -234,6 +244,7 @@ const NodeView: React.FC<Props> = ({
 							onLayout={onLayout}
 							child={node.child}
 							onDrag={nodeOnDrag[nodeIndex]}
+							adjustSize={nodeNewSize}
 							toStart={toStart[nodeIndex]}
 							viewPositionX={nodePositions[nodeIndex].x}
 							viewPositionY={nodePositions[nodeIndex].y}
@@ -414,6 +425,7 @@ interface IDragableView {
 	deleteNodeViewStyle?: ViewStyle;
 	deleteNodeLineStyle?: ViewStyle;
 	enableDeleteMode: boolean;
+	adjustSize: NodeSize | null;
 }
 
 const DragableView = ({
@@ -435,6 +447,7 @@ const DragableView = ({
 	deleteNodeViewStyle,
 	deleteNodeLineStyle,
 	enableDeleteMode,
+	adjustSize,
 }: IDragableView) => {
 	const rotateAnim = useRef(new Animated.Value(0)).current;
 	const rotateAnimInter = rotateAnim.interpolate({ inputRange: [-0.04, 0.04], outputRange: ['-3deg', '3deg'] });
@@ -500,6 +513,8 @@ const DragableView = ({
 			  })
 			: 0;
 
+	const childNode = child && adjustSize ? React.cloneElement(child, { adjustSize: adjustSize }) : child;
+
 	return (
 		<LongPressGestureHandler minDurationMs={800} onHandlerStateChange={onLongPress}>
 			<TapGestureHandler onHandlerStateChange={event => onTap(event.nativeEvent)}>
@@ -509,7 +524,7 @@ const DragableView = ({
 						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnimInter }],
 					}}>
 					<PanGestureHandler onGestureEvent={onDrag} onEnded={toStart}>
-						<Animated.View>{child ?? <NodeItem />}</Animated.View>
+						<Animated.View>{childNode ?? <NodeItem adjustSize={adjustSize} />}</Animated.View>
 					</PanGestureHandler>
 					<DeleteNodeButton
 						viewStyle={deleteNodeViewStyle}
