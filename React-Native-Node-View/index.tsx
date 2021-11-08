@@ -20,6 +20,8 @@ export interface Props {
 	nodesGroups: Array<NodeGroup>;
 	containerStyle?: ViewStyle;
 	lineStyle?: LineProps;
+	nodeSize?: number;
+	nodePadding?: number;
 	onDeleteNode?: (id: string, oldState: Array<NodeGroup>, newState: Array<NodeGroup>) => void;
 	onLongPress?: (id: string) => void;
 	maxZoom?: number;
@@ -80,6 +82,8 @@ const NodeView: React.FC<Props> = ({
 	nodesGroups,
 	containerStyle,
 	lineStyle,
+  nodeSize = 55,
+  nodePadding = 2,
 	onDeleteNode,
 	onLongPress,
 	maxZoom = 1.5,
@@ -232,8 +236,8 @@ const NodeView: React.FC<Props> = ({
 				{nodesMap.nodes.map((node, index) => {
 					const nodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === node.id);
 					let nodeNewSize = null;
-					if (viewLayout && viewLayout?.width / nodesMap.nodes.length < 55) {
-						const size = viewLayout?.width / nodesMap.nodes.length - 2;
+					if (viewLayout && viewLayout?.width / nodesMap.nodes.length < nodeSize) {
+            const size = viewLayout?.width / nodesMap.nodes.length - nodePadding;
 						nodeNewSize = { width: size, height: size };
 					}
 
