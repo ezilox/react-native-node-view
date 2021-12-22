@@ -63,6 +63,7 @@ interface INodePositions {
 }
 
 const NodeItem = ({ title, adjustSize }: any) => {
+
 	return (
 		<View
 			style={{
@@ -216,6 +217,35 @@ const NodeView: React.FC<Props> = ({
 		}
 	};
 
+  useEffect(() => {
+      if (positionPadding) {
+				const tempNodeLayout: any = {};
+				nodesGroups.forEach((group, groupIndex) => {
+					const groupLength = group.nodes.length;
+					let nodeNewSize = { width: nodeSize, height: nodeSize };
+					if (viewLayout && viewLayout?.width / groupLength < nodeSize) {
+						const size = viewLayout?.width / groupLength - nodePadding;
+						nodeNewSize = { width: size, height: size };
+					}
+					const groupWidth = groupLength * nodeNewSize.width;
+					const groupSpace = viewLayout ? viewLayout?.width - groupWidth : 0;
+					const spaces = groupSpace / (groupLength + 1);
+					group.nodes.forEach((node, index) => {
+						const positionX = (index + 1) * spaces + nodeNewSize.width * index;
+						const groupPadding = groupIndex * positionPadding;
+						const positionY = groupPadding + (positionPadding - nodeNewSize.height) / 2;
+						tempNodeLayout[node.id] = {
+							x: positionX,
+							y: positionY,
+							width: nodeNewSize.width,
+							height: nodeNewSize.height,
+						};
+					});
+				});
+				setNodesLayout(tempNodeLayout);
+			}
+  }, [viewLayout])
+
 	const deleteNodeHandler = (id: string) => {
 		const newNodesGroups = nodesGroups.map(nodeGroup => ({ ...nodeGroup }));
 		newNodesGroups.forEach(nodeGroup => {
@@ -229,13 +259,13 @@ const NodeView: React.FC<Props> = ({
 		nodesGroups.map((nodesMap, groupIndex) => (
 			<View
 				style={[
-					{ flexDirection: 'row', justifyContent: 'space-around', flex: 1, alignItems: 'center' },
+					{ flexDirection: 'row', justifyContent: 'space-evenly', flex: 1, alignItems: 'center' },
 					nodesMap.rowContainerStyle,
 				]}
 				key={groupIndex}>
 				{nodesMap.nodes.map((node, index) => {
 					const nodeIndex = nodes.findIndex(nodeIndex => nodeIndex.id === node.id);
-					let nodeNewSize = null;
+					let nodeNewSize = { width: nodeSize, height: nodeSize };
 					if (viewLayout && viewLayout?.width / nodesMap.nodes.length < nodeSize) {
             const size = viewLayout?.width / nodesMap.nodes.length - nodePadding;
 						nodeNewSize = { width: size, height: size };
@@ -523,7 +553,6 @@ const DragableView = ({
 		<LongPressGestureHandler minDurationMs={800} onHandlerStateChange={onLongPress}>
 			<TapGestureHandler onHandlerStateChange={event => onTap(event.nativeEvent)}>
 				<Animated.View
-					onLayout={event => onNodeLayout(id, event.nativeEvent.layout, groupIndex)}
 					style={{
 						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnimInter }],
 					}}>
