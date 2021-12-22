@@ -33,6 +33,7 @@ export interface Props {
 	deleteNodeViewStyle?: ViewStyle;
 	deleteNodeLineStyle?: ViewStyle;
 	enableDeleteMode?: boolean;
+  rtlLine: boolean;
 }
 
 interface NodeGroup {
@@ -96,6 +97,7 @@ const NodeView: React.FC<Props> = ({
 	deleteNodeViewStyle,
 	deleteNodeLineStyle,
 	enableDeleteMode = true,
+  rtlLine = false
 }) => {
 	const nodes = nodesGroups.map(nodeGroup => nodeGroup.nodes).flat();
 
@@ -218,7 +220,7 @@ const NodeView: React.FC<Props> = ({
 	};
 
   useEffect(() => {
-      if (positionPadding) {
+      if (positionPadding && viewLayout) {
 				const tempNodeLayout: any = {};
 				nodesGroups.forEach((group, groupIndex) => {
 					const groupLength = group.nodes.length;
@@ -228,14 +230,14 @@ const NodeView: React.FC<Props> = ({
 						nodeNewSize = { width: size, height: size };
 					}
 					const groupWidth = groupLength * nodeNewSize.width;
-					const groupSpace = viewLayout ? viewLayout?.width - groupWidth : 0;
+					const groupSpace = viewLayout?.width - groupWidth;
 					const spaces = groupSpace / (groupLength + 1);
 					group.nodes.forEach((node, index) => {
 						const positionX = (index + 1) * spaces + nodeNewSize.width * index;
 						const groupPadding = groupIndex * positionPadding;
 						const positionY = groupPadding + (positionPadding - nodeNewSize.height) / 2;
 						tempNodeLayout[node.id] = {
-							x: positionX,
+							x: rtlLine ? viewLayout.width - positionX - nodeNewSize.width : positionX,
 							y: positionY,
 							width: nodeNewSize.width,
 							height: nodeNewSize.height,
