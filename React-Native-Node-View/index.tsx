@@ -157,11 +157,24 @@ const NodeView: React.FC<Props> = ({
 
 	const onPinchHandlerStateChange = (event: PinchGestureHandlerStateChangeEvent) => {
 		if (event.nativeEvent.oldState === State.ACTIVE) {
-			lastScale *= event.nativeEvent.scale;
-			zoomBaseAnim.setValue(lastScale);
-			zoomPinchAnim.setValue(1);
+			const scale = lastScale * event.nativeEvent.scale;
+			if (scale >= minZoom && scale <= maxZoom) {
+				lastScale *= event.nativeEvent.scale;
+				zoomBaseAnim.setValue(lastScale);
+				zoomPinchAnim.setValue(1);
+			} else {
+				if (scale < minZoom) {
+					lastScale = minZoom;
+					Animated.spring(zoomBaseAnim, { useNativeDriver: true, toValue: lastScale, bounciness: 15 }).start();
+				}
+				if (scale > maxZoom) {
+					lastScale = maxZoom;
+					Animated.spring(zoomBaseAnim, { useNativeDriver: true, toValue: lastScale, bounciness: 15 }).start();
+				}
+				Animated.spring(zoomPinchAnim, { useNativeDriver: true, toValue: 1, bounciness: 15 }).start();
+			}
 		}
-	};
+	};;
 
 	const onPanHandlerStateChange = useCallback(() => {
 		graphTranslateY.extractOffset();
