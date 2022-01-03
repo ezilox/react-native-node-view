@@ -7,8 +7,7 @@ import {
 	State,
 } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { width: ScreenWidth, height: ScreenHeight } = Dimensions.get('screen');
+import Score from './Score';
 
 const circleQuarter = 4;
 
@@ -51,7 +50,11 @@ const ArcadeGame = () => {
 	const [lightCircle, setLightCircle] = useState<Array<string | null>>([]);
 	const [stop, setStop] = useState(false);
 	const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.init);
+	const [score, setScore] = useState(0);
 	const timeoutRef = useRef<number>();
+
+	const circleRotateAnim = useRef(new Animated.Value(0)).current;
+	const circleRotateAnimInter = circleRotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '90deg'] });
 
 	useEffect(() => {
 		const tempCircles = generateCircles();
@@ -60,18 +63,21 @@ const ArcadeGame = () => {
 
 	useEffect(() => {
 		if (circles.length > 0 && !stop) {
-			timeoutRef.current = window.setTimeout(() => {
-				if (lightCircle.length === 0) {
-					setLightCircle([circles[0].key]);
-				} else {
-					const currentCircleIndex = circles.findIndex(circle => lightCircle.includes(circle.key));
-					if (currentCircleIndex + 1 === circles.length) {
+			timeoutRef.current = window.setTimeout(
+				() => {
+					if (lightCircle.length === 0) {
 						setLightCircle([circles[0].key]);
-					} else if (currentCircleIndex !== -1) {
-						setLightCircle([circles[currentCircleIndex + 1].key]);
+					} else {
+						const currentCircleIndex = circles.findIndex(circle => lightCircle.includes(circle.key));
+						if (currentCircleIndex + 1 === circles.length) {
+							setLightCircle([circles[0].key]);
+						} else if (currentCircleIndex !== -1) {
+							setLightCircle([circles[currentCircleIndex + 1].key]);
+						}
 					}
-				}
-			}, 200);
+				},
+				score === 0 ? 200 : Math.max(200 - score * 2, 50)
+			);
 		}
 	}, [circles, lightCircle]);
 
@@ -81,59 +87,52 @@ const ArcadeGame = () => {
 			const index = circles.findIndex(circle => lightCircle.includes(circle.key));
 			if (index === circleDensityMultiplier * 2) {
 				setGameStatus(GameStatus.win);
+				setScore(score + 10);
 			} else {
 				setGameStatus(GameStatus.lose);
+				setScore(0);
 			}
 		}
 	}, [stop]);
 
-  // needs to put here useEffect
-	const lightCircleAnimation = () => {
-		const jackpotIndex = circleDensity / 2;
-		const tempLightCircle = [...lightCircle];
-		Array(jackpotIndex - 1)
-			.fill(null)
-			.map((value, index) => {
-				const offset = index + 1;
-				const firstIndex = jackpotIndex - offset;
-				const secondIndex = jackpotIndex + offset;
-
-				console.log('tempLightCircle', tempLightCircle);
-
-				setTimeout(() => {
-					tempLightCircle.push(circles[firstIndex].key, circles[secondIndex].key);
-					setLightCircle(tempLightCircle);
-				}, 200 * offset);
-
-				console.log('setting index', jackpotIndex - offset, 'and', jackpotIndex + offset);
-			});
-		console.log(circleDensity);
-	};
-	console.log();
+	useEffect(() => {
+		if (gameStatus === GameStatus.win) {
+			const tempLightCircle = [...lightCircle];
+			const jackpotIndex = circleDensity / 2;
+			let nextIndex = jackpotIndex - (tempLightCircle.length - 1) / 2;
+			if (nextIndex >= 0 && Number.isInteger(nextIndex)) {
+				if (nextIndex !== 0) {
+					tempLightCircle.push(circles[nextIndex].key);
+					tempLightCircle.push(circles[circleDensity - nextIndex].key);
+					setTimeout(() => setLightCircle(tempLightCircle), 150);
+				} else {
+					tempLightCircle.push(circles[0].key);
+					setTimeout(() => setLightCircle(tempLightCircle), 150);
+				}
+			} else {
+				Animated.timing(circleRotateAnim, { useNativeDriver: true, toValue: 1, duration: 250 }).start(() => {
+					resetGame();
+					Animated.timing(circleRotateAnim, { useNativeDriver: true, toValue: 0, duration: 250, delay: 20 }).start();
+				});
+			}
+		}
+	}, [gameStatus, lightCircle]);
 
 	const resetGame = () => {
-		lightCircleAnimation();
-		// setStop(false);
-		// setLightCircle([]);
-		// setGameStatus(GameStatus.init);
+		setStop(false);
+		setGameStatus(GameStatus.init);
+		setLightCircle([]);
 	};
 
 	const renderCircles = circles.map((circle, index) => {
 		const size = index === circleDensity / 2 ? jackpotCircleSize : circleSize;
 		return (
-			<View
+			<Circle
 				key={circle.key}
-				style={{
-					backgroundColor: lightCircle.includes(circle.key) ? '#007BAC' : 'white',
-					borderWidth: 1,
-					borderColor: '#007BAC',
-					width: size,
-					height: size,
-					borderRadius: size / 2,
-					position: 'absolute',
-					bottom: circle.x + circleContainerSize / 2 - size / 2,
-					left: circle.y + circleContainerSize / 2 - size / 2,
-				}}
+				isLightOn={lightCircle.includes(circle.key)}
+				size={size}
+				offsetX={circle.x + circleContainerSize / 2 - size / 2}
+				offsetY={circle.y + circleContainerSize / 2 - size / 2}
 			/>
 		);
 	});
@@ -147,8 +146,11 @@ const ArcadeGame = () => {
 					justifyContent: 'space-between',
 					marginHorizontal: 8,
 				}}>
-				<View></View>
-				<View>
+				<View style={{ justifyContent: 'center', alignItems: 'center' }}>
+					<Text>SCORE</Text>
+					<Score score={score} />
+				</View>
+				<Animated.View style={{ transform: [{ rotateY: circleRotateAnimInter }] }}>
 					<View
 						style={{
 							width: circleContainerSize,
@@ -169,18 +171,61 @@ const ArcadeGame = () => {
 							left: circleContainerSize / 2 - insideCircleSize / 2,
 						}}
 					/>
-				</View>
+				</Animated.View>
 
 				<StopButton gameStatus={gameStatus} setStop={setStop} resetGame={resetGame} />
-				<View style={{ marginTop: 20 }}>
+				{/* <View style={{ marginTop: 20 }}>
 					{gameStatus !== 'init' ? (
 						<Text style={{ fontSize: 30, color: gameStatus === 'win' ? 'green' : 'red' }}>{gameStatus}</Text>
 					) : (
 						<Text style={{ fontSize: 30 }}> </Text>
 					)}
-				</View>
+				</View> */}
 			</SafeAreaView>
 		</Modal>
+	);
+};
+
+interface CircleProps {
+	isLightOn: boolean;
+	size: number;
+	offsetX: number;
+	offsetY: number;
+}
+
+const Circle: React.FC<CircleProps> = ({ isLightOn, size, offsetX, offsetY }) => {
+	const backgroundScaleAnim = useRef(new Animated.Value(0)).current;
+	const backgroundScaleAnimInter = backgroundScaleAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+
+	useEffect(() => {
+		if (isLightOn) {
+			Animated.timing(backgroundScaleAnim, { useNativeDriver: true, toValue: 1, duration: 100 }).start();
+		} else {
+			Animated.timing(backgroundScaleAnim, { useNativeDriver: true, toValue: 0, duration: 1000 }).start();
+		}
+	}, [isLightOn]);
+	return (
+		<View
+			style={{
+				borderWidth: 1,
+				borderColor: '#007BAC',
+				width: size,
+				height: size,
+				borderRadius: size / 2,
+				position: 'absolute',
+				bottom: offsetX,
+				left: offsetY,
+				backgroundColor: 'white',
+			}}>
+			<Animated.View
+				style={{
+					width: '100%',
+					height: '100%',
+					transform: [{ scale: backgroundScaleAnimInter }],
+					backgroundColor: '#007BAC',
+					borderRadius: size / 2,
+				}}></Animated.View>
+		</View>
 	);
 };
 
@@ -194,7 +239,7 @@ const StopButton = ({ gameStatus, setStop, resetGame }: IStopButton) => {
 	const buttonTranslateY = useRef(new Animated.Value(0)).current;
 	const buttonTranslateYInter = buttonTranslateY.interpolate({ inputRange: [0, 1], outputRange: [0, 5] });
 	const onTap = (event: HandlerStateChangeEvent<TapGestureHandlerEventPayload>) => {
-		if (event.nativeEvent.state === State.ACTIVE) {
+		if (event.nativeEvent.state === State.ACTIVE && gameStatus !== GameStatus.win) {
 			onPressAnim();
 			gameStatus === 'init' ? setStop(true) : resetGame();
 		}
@@ -210,7 +255,7 @@ const StopButton = ({ gameStatus, setStop, resetGame }: IStopButton) => {
 			<View style={{ width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
 				<View style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>
 					<View style={[styles.stopButton, styles.stopButtonShadow]}>
-						<Text>{gameStatus === 'init' ? 'Press' : 'Reset'}</Text>
+						{/* <Text>{gameStatus === 'init' ? 'Press' : 'Reset'}</Text> */}
 					</View>
 					<Animated.View
 						style={[
@@ -219,7 +264,7 @@ const StopButton = ({ gameStatus, setStop, resetGame }: IStopButton) => {
 								transform: [{ translateY: buttonTranslateYInter }],
 							},
 						]}>
-						<Text>{gameStatus === 'init' ? 'Press' : 'Reset'}</Text>
+						<Text>{gameStatus === GameStatus.init || gameStatus === GameStatus.win ? 'Press' : 'Reset'}</Text>
 					</Animated.View>
 				</View>
 			</View>
