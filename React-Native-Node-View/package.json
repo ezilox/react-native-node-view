@@ -1,6 +1,6 @@
 {
   "name": "react-native-node-view",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Very simple way to draw node graph",
   "main": "index.tsx",
   "peerDependencies": {

@@ -37,6 +37,7 @@ export interface Props {
   rtlLine?: boolean;
   enableNodeAnimation?: boolean;
   panGesturePoints?: number
+  panGestureMinDist?: number
 }
 
 interface NodeGroup {
@@ -103,7 +104,8 @@ const NodeView: React.FC<Props> = ({
 	enableDeleteMode = true,
   rtlLine = false,
   enableNodeAnimation = true,
-  panGesturePoints = 2
+  panGesturePoints = 2,
+  panGestureMinDist = 10
 }) => {
 	const nodes = nodesGroups.map(nodeGroup => nodeGroup.nodes).flat();
 
@@ -350,7 +352,7 @@ const NodeView: React.FC<Props> = ({
 					<Animated.View style={{ flex: 1 }}>
 						<PanGestureHandler
 							enabled={enablePan}
-							minDist={10}
+							minDist={panGestureMinDist}
 							simultaneousHandlers={pinchGestureRef}
 							minPointers={panGesturePoints}
 							ref={panGestureRef}
