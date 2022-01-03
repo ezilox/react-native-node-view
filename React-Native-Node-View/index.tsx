@@ -26,6 +26,7 @@ export interface Props {
 	onLongPress?: (id: string) => void;
 	maxZoom?: number;
 	minZoom?: number;
+  initZoom?: number;
 	maxPan?: number;
 	minPan?: number;
 	enablePan?: boolean;
@@ -33,7 +34,9 @@ export interface Props {
 	deleteNodeViewStyle?: ViewStyle;
 	deleteNodeLineStyle?: ViewStyle;
 	enableDeleteMode?: boolean;
-  rtlLine: boolean;
+  rtlLine?: boolean;
+  enableNodeAnimation?: boolean;
+  panGesturePoints?: number
 }
 
 interface NodeGroup {
@@ -90,6 +93,7 @@ const NodeView: React.FC<Props> = ({
 	onLongPress,
 	maxZoom = 1.5,
 	minZoom = 0.5,
+  initZoom = 1,
 	maxPan = 100,
 	minPan = -100,
 	enablePan = false,
@@ -97,7 +101,9 @@ const NodeView: React.FC<Props> = ({
 	deleteNodeViewStyle,
 	deleteNodeLineStyle,
 	enableDeleteMode = true,
-  rtlLine = false
+  rtlLine = false,
+  enableNodeAnimation = true,
+  panGesturePoints = 2
 }) => {
 	const nodes = nodesGroups.map(nodeGroup => nodeGroup.nodes).flat();
 
@@ -122,8 +128,8 @@ const NodeView: React.FC<Props> = ({
 	let lastScale = 1;
 
 	const zoomAnimInter = zoomAnim.interpolate({
-		inputRange: [minZoom, maxZoom],
-		outputRange: [minZoom, maxZoom],
+		inputRange: [minZoom, 1, maxZoom],
+		outputRange: [minZoom, initZoom, maxZoom],
 		extrapolate: 'clamp',
 	});
 
@@ -295,6 +301,7 @@ const NodeView: React.FC<Props> = ({
 							deleteNodeViewStyle={deleteNodeViewStyle}
 							deleteNodeLineStyle={deleteNodeLineStyle}
 							enableDeleteMode={enableDeleteMode}
+              enableNodeAnimation={enableNodeAnimation}
 						/>
 					) : null;
 				})}
@@ -345,7 +352,7 @@ const NodeView: React.FC<Props> = ({
 							enabled={enablePan}
 							minDist={10}
 							simultaneousHandlers={pinchGestureRef}
-							minPointers={2}
+							minPointers={panGesturePoints}
 							ref={panGestureRef}
 							onHandlerStateChange={onPanHandlerStateChange}
 							onGestureEvent={onPan}>
@@ -462,6 +469,7 @@ interface IDragableView {
 	deleteNodeLineStyle?: ViewStyle;
 	enableDeleteMode: boolean;
 	adjustSize: NodeSize | null;
+  enableNodeAnimation?: boolean
 }
 
 const DragableView = ({
@@ -484,6 +492,7 @@ const DragableView = ({
 	deleteNodeLineStyle,
 	enableDeleteMode,
 	adjustSize,
+  enableNodeAnimation
 }: IDragableView) => {
 	const rotateAnim = useRef(new Animated.Value(0)).current;
 	const rotateAnimInter = rotateAnim.interpolate({ inputRange: [-0.04, 0.04], outputRange: ['-3deg', '3deg'] });
@@ -558,7 +567,7 @@ const DragableView = ({
 					style={{
 						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnimInter }],
 					}}>
-					<PanGestureHandler onGestureEvent={onDrag} onEnded={toStart}>
+					<PanGestureHandler enabled={enableNodeAnimation} onGestureEvent={onDrag} onEnded={toStart}>
 						<Animated.View>{childNode ?? <NodeItem adjustSize={adjustSize} />}</Animated.View>
 					</PanGestureHandler>
 					<DeleteNodeButton
