@@ -165,13 +165,13 @@ const NodeView: React.FC<Props> = ({
 			} else {
 				if (scale < minZoom) {
 					lastScale = minZoom;
-					Animated.spring(zoomBaseAnim, { useNativeDriver: true, toValue: lastScale, bounciness: 15 }).start();
+					Animated.timing(zoomBaseAnim, { useNativeDriver: true, toValue: lastScale, duration: 200 }).start();
 				}
 				if (scale > maxZoom) {
 					lastScale = maxZoom;
-					Animated.spring(zoomBaseAnim, { useNativeDriver: true, toValue: lastScale, bounciness: 15 }).start();
+					Animated.timing(zoomBaseAnim, { useNativeDriver: true, toValue: lastScale, duration: 200}).start();
 				}
-				Animated.spring(zoomPinchAnim, { useNativeDriver: true, toValue: 1, bounciness: 15 }).start();
+				Animated.timing(zoomPinchAnim, { useNativeDriver: true, toValue: 1, duration: 200 }).start();
 			}
 		}
 	};;
@@ -576,8 +576,8 @@ const DragableView = ({
 	const childNode = child && adjustSize ? React.cloneElement(child, { adjustSize: adjustSize }) : child;
 
 	return (
-		<LongPressGestureHandler enabled={enableNodeAnimation} minDurationMs={800} onHandlerStateChange={onLongPress}>
-			<TapGestureHandler enabled={enableNodeAnimation} onHandlerStateChange={event => onTap(event.nativeEvent)}>
+		<LongPressGestureHandler minDurationMs={800} onHandlerStateChange={onLongPress}>
+			<TapGestureHandler onHandlerStateChange={event => onTap(event.nativeEvent)}>
 				<Animated.View
 					style={{
 						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnimInter }],
