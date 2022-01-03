@@ -561,8 +561,8 @@ const DragableView = ({
 	const childNode = child && adjustSize ? React.cloneElement(child, { adjustSize: adjustSize }) : child;
 
 	return (
-		<LongPressGestureHandler minDurationMs={800} onHandlerStateChange={onLongPress}>
-			<TapGestureHandler onHandlerStateChange={event => onTap(event.nativeEvent)}>
+		<LongPressGestureHandler enabled={enableNodeAnimation} minDurationMs={800} onHandlerStateChange={onLongPress}>
+			<TapGestureHandler enabled={enableNodeAnimation} onHandlerStateChange={event => onTap(event.nativeEvent)}>
 				<Animated.View
 					style={{
 						transform: [{ translateX: maxTranslateX }, { translateY: maxTranslateY }, { rotateZ: rotateAnimInter }],
