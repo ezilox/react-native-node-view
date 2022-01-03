@@ -132,7 +132,7 @@ const NodeView: React.FC<Props> = ({
 	const zoomAnimInter = zoomAnim.interpolate({
 		inputRange: [minZoom, 1, maxZoom],
 		outputRange: [minZoom, initZoom, maxZoom],
-		extrapolate: 'clamp',
+		extrapolate: 'extend',
 	});
 
 	const graphTranslateX = useRef(new Animated.Value(0)).current;
@@ -141,13 +141,13 @@ const NodeView: React.FC<Props> = ({
 	const graphTranslateXInter = graphTranslateX.interpolate({
 		inputRange: [minPan, maxPan],
 		outputRange: [minPan, maxPan],
-		extrapolate: 'clamp',
+		extrapolate: 'extend'
 	});
 
 	const graphTranslateYInter = graphTranslateY.interpolate({
 		inputRange: [minPan, maxPan],
 		outputRange: [minPan, maxPan],
-		extrapolate: 'clamp',
+		extrapolate: 'extend',
 	});
 
 	const onPinch = Animated.event([{ nativeEvent: { scale: zoomPinchAnim } }], { useNativeDriver: true });
