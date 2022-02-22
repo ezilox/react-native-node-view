@@ -12,6 +12,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import ArcadeGame from './react-native-aracde-timing/index';
 import DrawGraph from './react-native-draw-graph/index';
 import DrawColumnGraph from './react-native-draw-column-graph/index';
+import FluidLoader from './react-native-fluid-loader';
+import StepCounter from './react-native-step-counter';
 
 // const data: Props['cards'] = [
 // 	{
@@ -47,7 +49,6 @@ import DrawColumnGraph from './react-native-draw-column-graph/index';
 // ];
 
 const CustomNodeItem = ({ adjustSize, title }: any) => {
-  
 	return (
 		<View
 			style={{
@@ -105,7 +106,7 @@ const nodesGroups = [
 			{ id: '6aaaa', child: <CustomNodeItem title="Heads" /> },
 		],
 	},
-  {
+	{
 		nodes: [
 			{ id: '2c', child: <CustomNodeItem title="Heads" /> },
 			{ id: '4c', child: <CustomNodeItem title="Heads" /> },
@@ -124,6 +125,11 @@ const nodesGroups = [
 			{ id: '6aac', child: <CustomNodeItem title="Heads" /> },
 			{ id: '6aaac', child: <CustomNodeItem title="Heads" /> },
 			{ id: '6aaaac', child: <CustomNodeItem title="Heads" /> },
+			{ id: '942ca', child: <CustomNodeItem title="Heads" /> },
+			{ id: '6ca', child: <CustomNodeItem title="Heads" /> },
+			{ id: '6aaca', child: <CustomNodeItem title="Heads" /> },
+			{ id: '6aaaca', child: <CustomNodeItem title="Heads" /> },
+			{ id: '6aaaaca', child: <CustomNodeItem title="Heads" /> },
 		],
 	},
 ];
@@ -133,6 +139,7 @@ export default function App() {
 	const [showMap, setShowMap] = useState(false);
 	const [node, setNodes] = useState(nodesGroups);
 	const [isNodeReady, setIsNodeReady] = useState(false);
+	const [percent, setPercent] = useState(0.2);
 
 	// useEffect(() => {
 	// 	// console.log( nodeRef.current.renderReady);
@@ -191,28 +198,44 @@ export default function App() {
 	];
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
 			{/* <ArcadeGame /> */}
-			<View
+			{/* <View
 				style={{
 					width: 300,
 					height: 400,
 					borderColor: 'gray',
 					alignSelf: 'center',
 					marginTop: 200,
-				}}>
-				{/* <DrawGraph points={points} /> */}
-				{/* <DrawPieChart /> */}
-				{/* <DrawColumnGraph /> */}
-				<NodeView
+          borderWidth: 1,
+				}}> */}
+			{/* <DrawGraph points={points} /> */}
+			{/* <DrawPieChart /> */}
+			{/* <DrawColumnGraph /> */}
+			{/* <NodeView
 					// onDeleteNode={(id, old, newNodes) => setNodes(newNodes)}
 					enablePan={false}
 					enableZoom={false}
 					nodesGroups={node}
 					nodeSize={55}
 					nodePadding={2}
+          rtlLine={false}
+          enableNodeAnimation={false}
+          panGesturePoints={1}
+          initZoom={0.7}
+				/> */}
+			<View style={{ width: 320, height: 80, backgroundColor: 'gray' }}>
+				{/* <FluidLoader percent={percent} colors={['#5DD3FD', '#007EF3', '#52C9FC']} /> */}
+				<StepCounter
+					circleFillColor="yellow"
+					circleEmptyColor="pink"
+					pathColor="white"
+					stepsCount={5}
+					currentStep={3}
 				/>
 			</View>
+			{/* <Button title="more" onPress={() => setPercent(percent + 0.1)} /> */}
+			{/* </View> */}
 		</View>
 	);
 }
