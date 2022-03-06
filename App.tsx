@@ -14,6 +14,8 @@ import DrawGraph from './react-native-draw-graph/index';
 import DrawColumnGraph from './react-native-draw-column-graph/index';
 import FluidLoader from './react-native-fluid-loader';
 import StepCounter from './react-native-step-counter';
+import ViewBounce from './react-native-view-bounce';
+import BorderSnake from './react-native-border-snake';
 
 // const data: Props['cards'] = [
 // 	{
@@ -224,15 +226,20 @@ export default function App() {
           panGesturePoints={1}
           initZoom={0.7}
 				/> */}
-			<View style={{ width: 320, height: 80, backgroundColor: 'gray' }}>
+			<View style={{ width: 220, height: 300, backgroundColor: 'gray' }}>
 				{/* <FluidLoader percent={percent} colors={['#5DD3FD', '#007EF3', '#52C9FC']} /> */}
-				<StepCounter
+				{/* <StepCounter
 					circleFillColor="yellow"
 					circleEmptyColor="pink"
 					pathColor="white"
 					stepsCount={5}
 					currentStep={3}
-				/>
+				/> */}
+				<BorderSnake speed={1} enabled={true} borderRadius={1} />
+				{/* <View style={{ backgroundColor: 'red', borderRadius: 30 }}>
+						<Button title="Press" onPress={() => console.log('Press')} />
+						<Text>Hello</Text>
+					</View> */}
 			</View>
 			{/* <Button title="more" onPress={() => setPercent(percent + 0.1)} /> */}
 			{/* </View> */}
