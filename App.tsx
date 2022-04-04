@@ -2,20 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, Text, View, Button, Alert, Modal } from 'react-native';
 import NodeView from './React-Native-Node-View/index';
 import Carousel, { Props } from './react-native-carousel/index';
-// import Bubbles from './react-native-bubbles/index';
-import ShapeMaker from './react-native-map-maker/components/ShapeMaker';
-import Shape from './react-native-map-maker/components/Shape';
-import Map from './react-native-map-maker/components/Map';
-import MapMaker from './react-native-map-maker/index';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import ArcadeGame from './react-native-aracde-timing/index';
-import DrawGraph from './react-native-draw-graph/index';
-import DrawColumnGraph from './react-native-draw-column-graph/index';
-import FluidLoader from './react-native-fluid-loader';
-import StepCounter from './react-native-step-counter';
-import ViewBounce from './react-native-view-bounce';
-import BorderSnake from './react-native-border-snake';
+import Bubbles from './react-native-bubbles/index';
+// import ShapeMaker from './react-native-map-maker/components/ShapeMaker';
+// import Shape from './react-native-map-maker/components/Shape';
+// import Map from './react-native-map-maker/components/Map';
+// import MapMaker from './react-native-map-maker/index';
+// import { NavigationContainer } from '@react-navigation/native';
+// import { createStackNavigator } from '@react-navigation/stack';
+// import ArcadeGame from './react-native-aracde-timing/index';
+// import DrawGraph from './react-native-draw-graph/index';
+// import DrawColumnGraph from './react-native-draw-column-graph/index';
+// import FluidLoader from './react-native-fluid-loader';
+// import StepCounter from './react-native-step-counter';
+// import ViewBounce from './react-native-view-bounce';
+// import BorderSnake from './react-native-border-snake';
+import TilesGame from './react-native-tiles-game';
+import FlatListSearch from './react-native-flatlist-search';
+import { AnimatedStyleUpdateExample } from './react-native-flatlist-search/test';
 
 // const data: Props['cards'] = [
 // 	{
@@ -198,7 +201,18 @@ export default function App() {
 		{ x: 380, y: 120 },
 		{ x: 390, y: 220 },
 	];
-
+	return <AnimatedStyleUpdateExample />;
+	return (
+		<View style={{ marginTop: 100 }}>
+			<FlatListSearch data={[]} renderItem={({ item }) => <View />} />
+		</View>
+	);
+	const images = Array(20)
+		.fill(null)
+		.map((v, i) => ({ imageUri: 'https://upload.wikimedia.org/wikipedia/en/7/77/EricCartman.png', key: i }));
+	// return (
+	// 	<Bubbles images={images} />
+	// );
 	return (
 		<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
 			{/* <ArcadeGame /> */}
@@ -226,21 +240,21 @@ export default function App() {
           panGesturePoints={1}
           initZoom={0.7}
 				/> */}
-			<View style={{ width: 220, height: 300, backgroundColor: 'gray' }}>
-				{/* <FluidLoader percent={percent} colors={['#5DD3FD', '#007EF3', '#52C9FC']} /> */}
-				{/* <StepCounter
+			{/* <View style={{ width: 220, height: 300, backgroundColor: 'gray' }}> */}
+			{/* <FluidLoader percent={percent} colors={['#5DD3FD', '#007EF3', '#52C9FC']} /> */}
+			{/* <StepCounter
 					circleFillColor="yellow"
 					circleEmptyColor="pink"
 					pathColor="white"
 					stepsCount={5}
 					currentStep={3}
 				/> */}
-				<BorderSnake speed={1} enabled={true} borderRadius={1} />
-				{/* <View style={{ backgroundColor: 'red', borderRadius: 30 }}>
+			{/* <BorderSnake speed={1} enabled={true} borderRadius={1} /> */}
+			{/* <View style={{ backgroundColor: 'red', borderRadius: 30 }}>
 						<Button title="Press" onPress={() => console.log('Press')} />
 						<Text>Hello</Text>
 					</View> */}
-			</View>
+			{/* </View> */}
 			{/* <Button title="more" onPress={() => setPercent(percent + 0.1)} /> */}
 			{/* </View> */}
 		</View>
