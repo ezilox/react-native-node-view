@@ -19,6 +19,8 @@ import Bubbles from './react-native-bubbles/index';
 import TilesGame from './react-native-tiles-game';
 import FlatListSearch from './react-native-flatlist-search';
 import { AnimatedStyleUpdateExample } from './react-native-flatlist-search/test';
+import SlideButton from './react-native-slide-button';
+import PolyMaker from './react-native-ploy-maker/PolyMaker';
 
 // const data: Props['cards'] = [
 // 	{
@@ -201,6 +203,12 @@ export default function App() {
 		{ x: 380, y: 120 },
 		{ x: 390, y: 220 },
 	];
+	return <PolyMaker />;
+	return (
+		<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+			<SlideButton onPress={() => console.log('Button Press')} />
+		</View>
+	);
 	return <AnimatedStyleUpdateExample />;
 	return (
 		<View style={{ marginTop: 100 }}>

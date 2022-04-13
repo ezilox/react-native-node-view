@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "expo": "~42.0.1",
+    "expo-blur": "~9.0.3",
+    "expo-linear-gradient": "~9.2.0",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-42.0.0.tar.gz",
