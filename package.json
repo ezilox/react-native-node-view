@@ -8,23 +8,26 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "expo": "~42.0.1",
-    "expo-blur": "~9.0.3",
-    "expo-linear-gradient": "~9.2.0",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-42.0.0.tar.gz",
-    "react-native-gesture-handler": "~1.10.2",
-    "react-native-reanimated": "~2.2.0",
+    "expo": "^44.0.0",
+    "expo-blur": "~11.0.0",
+    "expo-linear-gradient": "~11.0.3",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-native": "0.64.3",
+    "react-native-gesture-handler": "~2.1.0",
+    "react-native-get-random-values": "^1.7.2",
+    "react-native-reanimated": "~2.3.1",
     "react-native-svg": "12.1.1",
-    "react-native-web": "~0.13.12",
-    "svg-path-properties": "^1.0.11"
+    "react-native-web": "0.17.1",
+    "svg-path-properties": "^1.0.11",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@types/react": "~16.9.35",
-    "@types/react-native": "~0.63.2",
-    "typescript": "~4.0.0"
+    "@babel/core": "^7.12.9",
+    "@types/react": "~17.0.21",
+    "@types/react-native": "~0.64.12",
+    "@types/uuid": "^8.3.4",
+    "typescript": "~4.3.5"
   },
   "private": true
 }
