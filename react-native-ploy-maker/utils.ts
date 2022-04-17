@@ -1,3 +1,8 @@
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+
+const DIVISION_COUNT = 2;
+
 export const getIntersectionOfPoints = (
 	x1: number,
 	y1: number,
@@ -44,4 +49,22 @@ export const getDistanceBetweenPoints = (x1: number, y1: number, x2: number, y2:
 	const yDiff = y2 - y1;
 
 	return Math.sqrt(Math.pow(yDiff, 2) + Math.pow(xDiff, 2));
+};
+
+export const getInLinePoints = (line: Line, divisionCount = DIVISION_COUNT) => {
+	const points: Array<Point> = Array(divisionCount - 1)
+		.fill(null)
+		.map((value, index) => {
+			const xDiff = line.x2 - line.x1;
+			const yDiff = line.y2 - line.y1;
+
+			return {
+				x: line.x1 + ((index + 1) / divisionCount) * xDiff,
+				y: line.y1 + ((index + 1) / divisionCount) * yDiff,
+				associateLine: [line.id],
+				id: uuidv4(),
+			};
+		});
+
+	return points;
 };
