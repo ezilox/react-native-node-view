@@ -16,12 +16,14 @@ import { Shape } from './Shape';
 
 const AnimatedLine = Animated.createAnimatedComponent(SVGLine);
 
-const SNOW_SNAP_POINTS = true;
+const SNOW_SNAP_POINTS = false;
+const SHOW_LINE_ID = false;
 
 const SNAP_DISTANCE = 20;
 const PARALLEL_SAFE_ZONE = 10;
 
 const PolyMaker = () => {
+	const [selectedShape, setSelectedShape] = useState<Shape>();
 	const [lines, setLines] = useState<Array<Line>>([]);
 	const [intersectionPoints, setIntersectionPoints] = useState<Array<Point>>([]);
 	const [shapes, setShapes] = useState<Array<Shape>>([]);
@@ -37,14 +39,14 @@ const PolyMaker = () => {
 	}, [intersectionPoints, lines]);
 
 	const useEffectAsync = async () => {
-		let f: Array<Shape> = [];
+		let shapes: Array<Shape> = [];
 
 		for (let index = 0; index < intersectionPoints.length; index++) {
 			const point = intersectionPoints[index];
-			await findShapes(point, point, [], f);
+			await findShapes(point, point, [], shapes);
 		}
 
-		setShapes(f);
+		setShapes(shapes);
 	};
 
 	const sleep = async (timeout = 0) => {
@@ -57,12 +59,15 @@ const PolyMaker = () => {
 		}
 	};
 
-	const findShapes = async (startPoint: Point, point: Point, shapeLines: Array<Line> = [], f: Array<Shape> = []) => {
-		await sleep();
+	const findShapes = async (
+		startPoint: Point,
+		point: Point,
+		shapeLines: Array<Line> = [],
+		shapes: Array<Shape> = []
+	) => {
 		const linesToGo = Object.keys(point.associateLine).filter(lineId => !shapeLines.some(line => line.id === lineId));
 
 		for (let i = 0; i < linesToGo.length; i++) {
-			await sleep();
 			const lineId = linesToGo[i];
 
 			const goToPoints = intersectionPoints.filter(
@@ -70,22 +75,21 @@ const PolyMaker = () => {
 			);
 
 			for (let j = 0; j < goToPoints.length; j++) {
-				await sleep();
 				const goToPoint = goToPoints[j];
 				const line = lines.find(line => line.id === lineId);
 				if (line) {
 					shapeLines.push(line);
 
-					await findShapes(startPoint, goToPoint, shapeLines, f);
+					await findShapes(startPoint, goToPoint, shapeLines, shapes);
 					shapeLines.pop();
 				}
 			}
 		}
 
-		await sleep();
-
-		if (shapeLines.length > 1 && point.x === startPoint.x && point.y === startPoint.y) {
-			f.push(new Shape(shapeLines));
+		if (shapeLines.length > 1 && point.id === startPoint.id) {
+			const newShape = new Shape(shapeLines);
+			const isShapeExists = shapes.some(shape => shape.id === newShape.id);
+			!isShapeExists && shapes.push(new Shape(shapeLines));
 		}
 	};
 
@@ -358,19 +362,32 @@ const PolyMaker = () => {
 				y1={line.startPoint.y}
 				x2={line.endPoint.x}
 				y2={line.endPoint.y}
-				stroke={'pink'}
+				stroke={selectedShape ? (selectedShape?.hasLine(line) ? 'blue' : 'rgba(255,192,203, 0.4)') : 'pink'}
 				strokeWidth={4}
 				strokeLinecap="round"
 			/>
-			<Text
-				x={0 + (line.startPoint.x + line.endPoint.x) / 2}
-				y={(line.startPoint.y + line.endPoint.y) / 2 + 15}
-				fill="purple"
-				fontSize="14">
-				{line.id.slice(line.id.length - 2, line.id.length)}
-			</Text>
+			{SHOW_LINE_ID ? (
+				<Text
+					x={0 + (line.startPoint.x + line.endPoint.x) / 2}
+					y={(line.startPoint.y + line.endPoint.y) / 2 + 15}
+					fill="purple"
+					fontSize="14">
+					{line.id.slice(line.id.length - 2, line.id.length)}
+				</Text>
+			) : null}
 		</React.Fragment>
 	));
+
+	const renderSnapPoints = SNOW_SNAP_POINTS
+		? snapPoints.map(point => (
+				<React.Fragment key={point.id}>
+					<Text x={15 + point.x} y={5 + point.y} fill="purple" fontSize="8">
+						{point.x.toFixed(0)}/{point.y.toFixed(0)}
+					</Text>
+					<Circle cx={point.x} cy={point.y} r="3" fill="pink" opacity={1} />
+				</React.Fragment>
+		  ))
+		: false;
 
 	return (
 		<PanGestureHandler enabled={true} onGestureEvent={onPan}>
@@ -378,22 +395,12 @@ const PolyMaker = () => {
 				<View style={{ backgroundColor: 'lightgray', width: '100%', height: 100, position: 'absolute', bottom: 0 }}>
 					<Button onPress={removeLine} title="Undo" />
 				</View>
-
 				<Svg>
 					{renderLines}
-					{SNOW_SNAP_POINTS
-						? snapPoints.map(point => (
-								<React.Fragment key={point.id}>
-									<Text x={15 + point.x} y={5 + point.y} fill="purple" fontSize="8">
-										{point.x.toFixed(0)}/{point.y.toFixed(0)}
-									</Text>
-									<Circle cx={point.x} cy={point.y} r="3" fill="pink" opacity={1} />
-								</React.Fragment>
-						  ))
-						: false}
+					{renderSnapPoints}
 					<AnimatedLine animatedProps={lineAnimatedProps} stroke="pink" strokeWidth={4} />
 				</Svg>
-				<MiniShapeList shapes={shapes} />
+				<MiniShapeList setShape={setSelectedShape} shapes={shapes} />
 			</Animated.View>
 		</PanGestureHandler>
 	);

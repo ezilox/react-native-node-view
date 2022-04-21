@@ -8,16 +8,13 @@ export class Shape {
 	}
 
 	shapeId(lines: Array<Line>) {
-		return String(
-			lines.reduce(
-				(previousValue, currentValue) =>
-					String(currentValue.endPoint.x) +
-					String(currentValue.endPoint.y) +
-					String(currentValue.startPoint.x) +
-					String(currentValue.startPoint.y) +
-					String(previousValue),
-				''
-			)
-		);
+		return lines
+			.map(line => line.id)
+			.sort()
+			.join('');
 	}
+
+	hasLine(line: Line) {
+    return this.id.includes(line.id);
+  }
 }
