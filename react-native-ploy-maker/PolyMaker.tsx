@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Button, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Keyboard, View } from 'react-native';
 import { Svg, Line as SVGLine, LineProps, Circle, Text } from 'react-native-svg';
 import Animated, {
 	runOnJS,
@@ -7,7 +7,14 @@ import Animated, {
 	useSharedValue,
 	useAnimatedProps,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+	GestureEventPayload,
+	PanGestureHandler,
+	TapGestureHandler,
+	TapGestureHandlerEventPayload,
+	TapGestureHandlerGestureEvent,
+	TextInput,
+} from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { getIntersectionOfPoints, getDistanceBetweenPoints, getInLinePoints } from './utils';
@@ -24,9 +31,14 @@ const PARALLEL_SAFE_ZONE = 10;
 
 const PolyMaker = () => {
 	const [selectedShape, setSelectedShape] = useState<Shape>();
+	const [selectedAngleId, setSelectedAngleId] = useState<string>();
 	const [lines, setLines] = useState<Array<Line>>([]);
 	const [intersectionPoints, setIntersectionPoints] = useState<Array<Point>>([]);
 	const [shapes, setShapes] = useState<Array<Shape>>([]);
+
+	const selectedAngle = selectedShape?.angles.find(angle => angle.id === selectedAngleId);
+
+	const tapRef = useRef();
 
 	const startPointX = useSharedValue(0);
 	const startPointY = useSharedValue(0);
@@ -335,6 +347,39 @@ const PolyMaker = () => {
 		setLines(tempLines);
 	};
 
+	const onTapActive = (event: Readonly<GestureEventPayload & TapGestureHandlerEventPayload>) => {
+		if (!selectedAngleId) {
+			const angle = selectedShape?.isCloseToAngle(event.x, event.y);
+			if (angle) {
+				setSelectedAngleId(angle.id);
+			}
+		} else {
+			Keyboard.dismiss();
+			setSelectedAngleId(undefined);
+		}
+	};
+
+	const onTap = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
+		onActive: event => {
+			runOnJS(onTapActive)(event);
+		},
+	});
+
+	const updateAngleValue = (value: number) => {
+		if (selectedAngle && selectedShape) {
+			selectedAngle.value = value;
+			const tempSelectedShape = Object.assign(
+				Object.create(Object.getPrototypeOf(selectedShape)),
+				selectedShape
+			) as Shape;
+			const angleIndex = tempSelectedShape.angles.findIndex(angle => angle.id === selectedAngleId);
+			if (angleIndex !== -1) {
+				tempSelectedShape.angles[angleIndex] = selectedAngle;
+				setSelectedShape(tempSelectedShape);
+			}
+		}
+	};
+
 	const onPan = useAnimatedGestureHandler({
 		onStart: event => {
 			runOnJS(onStartPan)(event.absoluteX, event.absoluteY);
@@ -389,18 +434,49 @@ const PolyMaker = () => {
 		  ))
 		: false;
 
+	const renderAngles = selectedShape?.angles.map(angle => {
+		return (
+			<React.Fragment key={angle.id}>
+				<Circle cx={angle.x} cy={angle.y} r="3" fill="black" opacity={1} />
+				<Text fill="purple" fontSize="12" x={angle.x + 10} y={angle.y}>
+					{angle.value}
+				</Text>
+			</React.Fragment>
+		);
+	});
+
 	return (
-		<PanGestureHandler enabled={true} onGestureEvent={onPan}>
-			<Animated.View style={{ flex: 1, backgroundColor: 'gray' }}>
-				<View style={{ backgroundColor: 'lightgray', width: '100%', height: 100, position: 'absolute', bottom: 0 }}>
-					<Button onPress={removeLine} title="Undo" />
-				</View>
-				<Svg>
-					{renderLines}
-					{renderSnapPoints}
-					<AnimatedLine animatedProps={lineAnimatedProps} stroke="pink" strokeWidth={4} />
-				</Svg>
-				<MiniShapeList setShape={setSelectedShape} shapes={shapes} />
+		<PanGestureHandler waitFor={tapRef} onGestureEvent={onPan}>
+			<Animated.View style={{ flex: 1 }}>
+				<TapGestureHandler ref={tapRef} onGestureEvent={onTap}>
+					<Animated.View style={{ flex: 1, backgroundColor: 'gray' }}>
+						<View style={{ backgroundColor: 'lightgray', width: '100%', height: 100, position: 'absolute', bottom: 0 }}>
+							<Button onPress={removeLine} title="Undo" />
+						</View>
+						<Svg>
+							{renderLines}
+							{renderSnapPoints}
+							{renderAngles}
+							<AnimatedLine animatedProps={lineAnimatedProps} stroke="pink" strokeWidth={4} />
+						</Svg>
+						<MiniShapeList setShape={setSelectedShape} shapes={shapes} />
+						{selectedAngle ? (
+							<TextInput
+								keyboardType="number-pad"
+								value={String(selectedAngle.value ?? 0)}
+								onChangeText={value => updateAngleValue(parseInt(value))}
+								style={{
+									position: 'absolute',
+									top: selectedAngle.y,
+									left: selectedAngle.x,
+									backgroundColor: 'red',
+									width: 20,
+									height: 10,
+								}}
+							/>
+						) : null}
+					</Animated.View>
+				</TapGestureHandler>
 			</Animated.View>
 		</PanGestureHandler>
 	);
