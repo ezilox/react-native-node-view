@@ -21,6 +21,7 @@ import FlatListSearch from './react-native-flatlist-search';
 import { AnimatedStyleUpdateExample } from './react-native-flatlist-search/test';
 import SlideButton from './react-native-slide-button';
 import PolyMaker from './react-native-ploy-maker/PolyMaker';
+import ImageResize from './react-native-image-resize/ImageResize';
 
 // const data: Props['cards'] = [
 // 	{
@@ -203,6 +204,7 @@ export default function App() {
 		{ x: 380, y: 120 },
 		{ x: 390, y: 220 },
 	];
+	// return <ImageResize uri="https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg" />;
 	return <PolyMaker />;
 	return (
 		<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
