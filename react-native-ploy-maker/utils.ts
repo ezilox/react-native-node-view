@@ -51,6 +51,8 @@ export const getDistanceBetweenPoints = (x1: number, y1: number, x2: number, y2:
 	return Math.sqrt(Math.pow(yDiff, 2) + Math.pow(xDiff, 2));
 };
 
+export const deepCopy = (obj: any) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
+
 export const getInLinePoints = (line: Line, divisionCount = DIVISION_COUNT) => {
 	const points: Array<Point> = Array(divisionCount - 1)
 		.fill(null)

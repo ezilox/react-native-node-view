@@ -1,5 +1,6 @@
 import { getDistanceBetweenPoints } from './utils';
 import { Angle } from './Angle';
+import { Line } from './Line';
 
 export class Shape {
 	id: string;
@@ -32,6 +33,18 @@ export class Shape {
 		const angleDistances = this.angles.find(angle => getDistanceBetweenPoints(x, y, angle.x, angle.y) < angleDistance);
 		if (angleDistances) {
 			return angleDistances;
+		}
+	}
+
+	isCloseToLine(x: number, y: number) {
+		const lineDistance = 30;
+
+		const lineDistances = this.lines.find(
+			line => getDistanceBetweenPoints(x, y, line.centerPoint.x, line.centerPoint.y) < lineDistance
+		);
+
+		if (lineDistances) {
+			return lineDistances;
 		}
 	}
 }

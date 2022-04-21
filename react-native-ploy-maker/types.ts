@@ -18,11 +18,3 @@ interface SimpleLine {
 	endPoint: SimplePoint;
 }
 
-interface Line {
-	id: string;
-	parentId?: string;
-	startPoint: Point;
-	endPoint: Point;
-}
-
-// type Shape = Array<Line>;

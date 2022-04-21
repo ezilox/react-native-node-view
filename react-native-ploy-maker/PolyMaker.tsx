@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Keyboard, View } from 'react-native';
 import { Svg, Line as SVGLine, LineProps, Circle, Text } from 'react-native-svg';
 import Animated, {
@@ -17,9 +17,15 @@ import {
 } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { getIntersectionOfPoints, getDistanceBetweenPoints, getInLinePoints } from './utils';
+import { getIntersectionOfPoints, getDistanceBetweenPoints, deepCopy } from './utils';
 import MiniShapeList from './MiniShapeList';
 import { Shape } from './Shape';
+import { Line } from './Line';
+import { stores } from './stores/storeIndex';
+import { observer } from 'mobx-react-lite';
+import { Angle } from './Angle';
+
+export const storeContext = createContext<typeof stores>(stores);
 
 const AnimatedLine = Animated.createAnimatedComponent(SVGLine);
 
@@ -29,14 +35,11 @@ const SHOW_LINE_ID = false;
 const SNAP_DISTANCE = 20;
 const PARALLEL_SAFE_ZONE = 10;
 
-const PolyMaker = () => {
-	const [selectedShape, setSelectedShape] = useState<Shape>();
-	const [selectedAngleId, setSelectedAngleId] = useState<string>();
+const PolyMaker = observer(() => {
+	const { shapeStore } = useContext(storeContext);
 	const [lines, setLines] = useState<Array<Line>>([]);
 	const [intersectionPoints, setIntersectionPoints] = useState<Array<Point>>([]);
 	const [shapes, setShapes] = useState<Array<Shape>>([]);
-
-	const selectedAngle = selectedShape?.angles.find(angle => angle.id === selectedAngleId);
 
 	const tapRef = useRef();
 
@@ -118,10 +121,10 @@ const PolyMaker = () => {
 		.flat();
 
 	const snapPoints = useMemo(() => {
-		const inLinePoints: Array<Point> = lines.map(line => getInLinePoints(line)).flat();
+		// const inLinePoints: Array<Point> = lines.map(line => getInLinePoints(line)).flat();
 
 		return [...startEndPoints, ...intersectionPoints];
-		return [...startEndPoints, ...intersectionPoints, ...inLinePoints];
+		// return [...startEndPoints, ...intersectionPoints, ...inLinePoints];
 	}, [lines, intersectionPoints]);
 
 	const removeParentLines = (lines: Array<Line>, intersectionPoints: Array<Point>) => {
@@ -199,30 +202,10 @@ const PolyMaker = () => {
 				) {
 					newLines.push(line);
 				} else {
-					newSegmentsLines.push({
-						id: uuidv4(),
-						startPoint: line.startPoint,
-						endPoint: newPoint,
-						parentId: line.id,
-					});
-					newSegmentsLines.push({
-						id: uuidv4(),
-						startPoint: line.endPoint,
-						endPoint: newPoint,
-						parentId: line.id,
-					});
-					newSegmentsLines.push({
-						id: uuidv4(),
-						startPoint: secondLine.startPoint,
-						endPoint: newPoint,
-						parentId: secondLine.id,
-					});
-					newSegmentsLines.push({
-						id: uuidv4(),
-						startPoint: secondLine.endPoint,
-						endPoint: newPoint,
-						parentId: secondLine.id,
-					});
+					newSegmentsLines.push(new Line(line.startPoint, newPoint, line.id));
+					newSegmentsLines.push(new Line(line.endPoint, newPoint, line.id));
+					newSegmentsLines.push(new Line(secondLine.startPoint, newPoint, secondLine.id));
+					newSegmentsLines.push(new Line(secondLine.endPoint, newPoint, secondLine.id));
 					if (newSegmentsLines.length > 0) {
 						newPoint.associateLine = {};
 						newSegmentsLines.map(newLine => (newPoint.associateLine[newLine.id] = true));
@@ -316,13 +299,10 @@ const PolyMaker = () => {
 
 	const onEndPan = () => {
 		if (startPointX.value && startPointY.value && panPointX.value && panPointY.value) {
-			const newLineId = uuidv4();
-			const newLine: Line = {
-				id: newLineId,
-				startPoint: { x: startPointX.value, y: startPointY.value, id: uuidv4(), associateLine: {} },
-				endPoint: { x: panPointX.value, y: panPointY.value, id: uuidv4(), associateLine: {} },
-			};
-
+			const newLine = new Line(
+				{ x: startPointX.value, y: startPointY.value, id: uuidv4(), associateLine: {} },
+				{ x: panPointX.value, y: panPointY.value, id: uuidv4(), associateLine: {} }
+			);
 			addNewLine(newLine);
 		}
 		startPointX.value = 0;
@@ -348,14 +328,47 @@ const PolyMaker = () => {
 	};
 
 	const onTapActive = (event: Readonly<GestureEventPayload & TapGestureHandlerEventPayload>) => {
-		if (!selectedAngleId) {
-			const angle = selectedShape?.isCloseToAngle(event.x, event.y);
+		if (!shapeStore.selectedAngleId && !shapeStore.selectedLineId) {
+			const angle = shapeStore.selectedShape?.isCloseToAngle(event.x, event.y);
 			if (angle) {
-				setSelectedAngleId(angle.id);
+				shapeStore.selectedAngleId = angle.id;
+				return;
+			}
+			const line = shapeStore.selectedShape?.isCloseToLine(event.x, event.y);
+			if (line) {
+				shapeStore.selectedLineId = line.id;
+				return;
 			}
 		} else {
 			Keyboard.dismiss();
-			setSelectedAngleId(undefined);
+			shapeStore.selectedAngleId = null;
+			shapeStore.selectedLineId = null;
+		}
+	};
+
+	const updateAngleValue = (value: number) => {
+		if (shapeStore.selectedAngleId && shapeStore.selectedShape) {
+			const angleIndex = shapeStore.selectedShape.angles.findIndex(angle => angle.id === shapeStore.selectedAngleId);
+			if (angleIndex !== -1) {
+				const deepCopyShape = deepCopy(shapeStore.selectedShape) as Shape;
+				const deepCopyAngle = deepCopy(deepCopyShape.angles[angleIndex]) as Angle;
+				deepCopyAngle.value = value;
+				deepCopyShape.angles[angleIndex] = deepCopyAngle;
+				shapeStore.selectedShape = deepCopyShape;
+			}
+		}
+	};
+
+	const updateLineValue = (value: number) => {
+		if (shapeStore.selectedLineId && shapeStore.selectedShape) {
+			const lineIndex = shapeStore.selectedShape.lines.findIndex(line => line.id === shapeStore.selectedLineId);
+			if (lineIndex !== -1) {
+				const deepCopyShape = deepCopy(shapeStore.selectedShape) as Shape;
+				const deepCopyLine = deepCopy(deepCopyShape.lines[lineIndex]) as Line;
+				deepCopyLine.value = value;
+				deepCopyShape.lines[lineIndex] = deepCopyLine;
+				shapeStore.selectedShape = deepCopyShape;
+			}
 		}
 	};
 
@@ -364,21 +377,6 @@ const PolyMaker = () => {
 			runOnJS(onTapActive)(event);
 		},
 	});
-
-	const updateAngleValue = (value: number) => {
-		if (selectedAngle && selectedShape) {
-			selectedAngle.value = value;
-			const tempSelectedShape = Object.assign(
-				Object.create(Object.getPrototypeOf(selectedShape)),
-				selectedShape
-			) as Shape;
-			const angleIndex = tempSelectedShape.angles.findIndex(angle => angle.id === selectedAngleId);
-			if (angleIndex !== -1) {
-				tempSelectedShape.angles[angleIndex] = selectedAngle;
-				setSelectedShape(tempSelectedShape);
-			}
-		}
-	};
 
 	const onPan = useAnimatedGestureHandler({
 		onStart: event => {
@@ -407,7 +405,13 @@ const PolyMaker = () => {
 				y1={line.startPoint.y}
 				x2={line.endPoint.x}
 				y2={line.endPoint.y}
-				stroke={selectedShape ? (selectedShape?.hasLine(line) ? 'blue' : 'rgba(255,192,203, 0.4)') : 'pink'}
+				stroke={
+					shapeStore.selectedShape
+						? shapeStore.selectedShape?.hasLine(line)
+							? 'blue'
+							: 'rgba(255,192,203, 0.4)'
+						: 'pink'
+				}
 				strokeWidth={4}
 				strokeLinecap="round"
 			/>
@@ -434,12 +438,23 @@ const PolyMaker = () => {
 		  ))
 		: false;
 
-	const renderAngles = selectedShape?.angles.map(angle => {
+	const renderAnglesValues = shapeStore.selectedShape?.angles.map(angle => {
 		return (
 			<React.Fragment key={angle.id}>
 				<Circle cx={angle.x} cy={angle.y} r="3" fill="black" opacity={1} />
 				<Text fill="purple" fontSize="12" x={angle.x + 10} y={angle.y}>
 					{angle.value}
+				</Text>
+			</React.Fragment>
+		);
+	});
+
+	const renderLineValues = shapeStore.selectedShape?.lines.map(line => {
+		return (
+			<React.Fragment key={line.id}>
+				{/* <Circle cx={angle.x} cy={angle.y} r="3" fill="black" opacity={1} /> */}
+				<Text x={line.centerPoint.x} y={line.centerPoint.y} fill="purple" fontSize="14">
+					{line.value}
 				</Text>
 			</React.Fragment>
 		);
@@ -456,19 +471,40 @@ const PolyMaker = () => {
 						<Svg>
 							{renderLines}
 							{renderSnapPoints}
-							{renderAngles}
+							{renderAnglesValues}
+							{renderLineValues}
 							<AnimatedLine animatedProps={lineAnimatedProps} stroke="pink" strokeWidth={4} />
 						</Svg>
-						<MiniShapeList setShape={setSelectedShape} shapes={shapes} />
-						{selectedAngle ? (
+						<MiniShapeList
+							setShape={(shape: Shape) => {
+								shapeStore.selectedShape = shape;
+							}}
+							shapes={shapes}
+						/>
+						{shapeStore.selectedAngle ? (
 							<TextInput
 								keyboardType="number-pad"
-								value={String(selectedAngle.value ?? 0)}
+								value={String(shapeStore.selectedAngle.value ?? '0')}
 								onChangeText={value => updateAngleValue(parseInt(value))}
 								style={{
 									position: 'absolute',
-									top: selectedAngle.y,
-									left: selectedAngle.x,
+									top: shapeStore.selectedAngle.y,
+									left: shapeStore.selectedAngle.x,
+									backgroundColor: 'red',
+									width: 20,
+									height: 10,
+								}}
+							/>
+						) : null}
+						{shapeStore.selectedLine ? (
+							<TextInput
+								keyboardType="number-pad"
+								value={String(shapeStore.selectedLine.value ?? '0')}
+								onChangeText={value => updateLineValue(parseInt(value))}
+								style={{
+									position: 'absolute',
+									top: shapeStore.selectedLine.centerPoint.y,
+									left: shapeStore.selectedLine.centerPoint.x,
 									backgroundColor: 'red',
 									width: 20,
 									height: 10,
@@ -480,6 +516,6 @@ const PolyMaker = () => {
 			</Animated.View>
 		</PanGestureHandler>
 	);
-};
+});
 
 export default PolyMaker;

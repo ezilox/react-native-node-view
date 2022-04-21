@@ -9,6 +9,7 @@ interface Props {
 }
 
 const MiniShapeList: React.FC<Props> = ({ shapes, setShape }) => {
+
 	const renderItem: ListRenderItem<Shape> = ({ item }) => <MiniShapeItem setShape={setShape} shape={item} />;
 	return (
 		<View style={{ width: '100%', height: 100, backgroundColor: 'lightgray', position: 'absolute', bottom: 100 }}>

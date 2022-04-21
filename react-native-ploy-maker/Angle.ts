@@ -1,3 +1,5 @@
+import { Line } from './Line';
+
 export class Angle {
 	id: string;
 	x: number;
