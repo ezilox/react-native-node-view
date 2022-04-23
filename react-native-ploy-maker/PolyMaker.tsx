@@ -24,13 +24,14 @@ import { Line } from './Line';
 import { stores } from './stores/storeIndex';
 import { observer } from 'mobx-react-lite';
 import { Angle } from './Angle';
+import * as Haptics from 'expo-haptics';
 
 export const storeContext = createContext<typeof stores>(stores);
 
 const AnimatedLine = Animated.createAnimatedComponent(SVGLine);
 
 const SNOW_SNAP_POINTS = false;
-const SHOW_LINE_ID = true;
+const SHOW_LINE_ID = false;
 
 const SNAP_DISTANCE = 20;
 const PARALLEL_SAFE_ZONE = 10;
@@ -42,6 +43,8 @@ const PolyMaker = observer(() => {
 	const [shapes, setShapes] = useState<Array<Shape>>([]);
 
 	const tapRef = useRef();
+	const angleInputRef = useRef<any>(null);
+	const lineInputRef = useRef<any>(null);
 
 	const startPointX = useSharedValue(0);
 	const startPointY = useSharedValue(0);
@@ -300,6 +303,10 @@ const PolyMaker = observer(() => {
 
 		const closePoint = isPointClose(x, y);
 
+		if (closePoint && panPointX.value !== closePoint.x && panPointY.value !== closePoint.y) {
+			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+		}
+
 		panPointX.value = closePoint ? closePoint.x : x;
 		panPointY.value = closePoint ? closePoint.y : y;
 	};
@@ -338,11 +345,13 @@ const PolyMaker = observer(() => {
 		if (!shapeStore.selectedAngleId && !shapeStore.selectedLineId) {
 			const angle = shapeStore.selectedShape?.isCloseToAngle(event.x, event.y);
 			if (angle) {
+				angleInputRef.current?.focus && angleInputRef.current?.focus();
 				shapeStore.selectedAngleId = angle.id;
 				return;
 			}
 			const line = shapeStore.selectedShape?.isCloseToLine(event.x, event.y);
 			if (line) {
+				lineInputRef.current?.focus && lineInputRef.current?.focus();
 				shapeStore.selectedLineId = line.id;
 				return;
 			}
@@ -459,8 +468,7 @@ const PolyMaker = observer(() => {
 	const renderLineValues = shapeStore.selectedShape?.lines.map(line => {
 		return (
 			<React.Fragment key={line.id}>
-				{/* <Circle cx={angle.x} cy={angle.y} r="3" fill="black" opacity={1} /> */}
-				<Text x={line.centerPoint.x} y={line.centerPoint.y} fill="purple" fontSize="14">
+				<Text x={line.centerPoint.x} y={line.centerPoint.y} fill="black" fontSize="16">
 					{line.value}
 				</Text>
 			</React.Fragment>
@@ -477,9 +485,9 @@ const PolyMaker = observer(() => {
 						</View>
 						<Svg>
 							{renderLines}
+							{renderLineValues}
 							{renderSnapPoints}
 							{renderAnglesValues}
-							{renderLineValues}
 							<AnimatedLine animatedProps={lineAnimatedProps} stroke="pink" strokeWidth={4} />
 						</Svg>
 						<MiniShapeList
@@ -488,36 +496,32 @@ const PolyMaker = observer(() => {
 							}}
 							shapes={shapes}
 						/>
-						{shapeStore.selectedAngle ? (
-							<TextInput
-								keyboardType="number-pad"
-								value={String(shapeStore.selectedAngle.value ?? '0')}
-								onChangeText={value => updateAngleValue(parseInt(value))}
-								style={{
-									position: 'absolute',
-									top: shapeStore.selectedAngle.y,
-									left: shapeStore.selectedAngle.x,
-									backgroundColor: 'red',
-									width: 20,
-									height: 10,
-								}}
-							/>
-						) : null}
-						{shapeStore.selectedLine ? (
-							<TextInput
-								keyboardType="number-pad"
-								value={String(shapeStore.selectedLine.value ?? '0')}
-								onChangeText={value => updateLineValue(parseInt(value))}
-								style={{
-									position: 'absolute',
-									top: shapeStore.selectedLine.centerPoint.y,
-									left: shapeStore.selectedLine.centerPoint.x,
-									backgroundColor: 'red',
-									width: 20,
-									height: 10,
-								}}
-							/>
-						) : null}
+						<TextInput
+							ref={angleInputRef}
+							keyboardType="number-pad"
+							value={String(!shapeStore.selectedAngle ? '0' : shapeStore.selectedAngle.value ?? '0')}
+							onChangeText={value => updateAngleValue(value ? parseInt(value) : 0)}
+							style={{
+								position: 'absolute',
+								top: 0,
+								left: 0,
+								width: 0,
+								height: 0,
+							}}
+						/>
+						<TextInput
+							ref={lineInputRef}
+							keyboardType="number-pad"
+							value={String(!shapeStore.selectedLine ? '0' : shapeStore.selectedLine.value ?? '0')}
+							onChangeText={value => updateLineValue(parseInt(value))}
+							style={{
+								position: 'absolute',
+								top: 0,
+								left: 0,
+								width: 0,
+								height: 0,
+							}}
+						/>
 					</Animated.View>
 				</TapGestureHandler>
 			</Animated.View>

@@ -10,6 +10,7 @@
   "dependencies": {
     "expo": "^44.0.0",
     "expo-blur": "~11.0.0",
+    "expo-haptics": "~11.1.0",
     "expo-image-manipulator": "~10.2.0",
     "expo-linear-gradient": "~11.0.3",
     "mobx": "^6.5.0",

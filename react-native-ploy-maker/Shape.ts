@@ -11,7 +11,7 @@ export class Shape {
 		this.lines = [...shapeLines];
 		this.id = this.shapeId(shapeLines);
 		this.angles = shapeLines.map((line, index) => {
-			const beforeIndex = index - 1 < 0 ? shapeLines.length - 1 : index - 1;
+			const beforeIndex = index === 0 ? shapeLines.length - 1 : index - 1;
 			return new Angle(line, shapeLines[beforeIndex]);
 		});
 	}
