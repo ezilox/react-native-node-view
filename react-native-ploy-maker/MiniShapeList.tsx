@@ -9,7 +9,6 @@ interface Props {
 }
 
 const MiniShapeList: React.FC<Props> = ({ shapes, setShape }) => {
-
 	const renderItem: ListRenderItem<Shape> = ({ item }) => <MiniShapeItem setShape={setShape} shape={item} />;
 	return (
 		<View style={{ width: '100%', height: 100, backgroundColor: 'lightgray', position: 'absolute', bottom: 100 }}>
@@ -45,8 +44,6 @@ const MiniShapeItem: React.FC<IMiniShapeItem> = ({ shape, setShape }) => {
 		viewBoxWidth = distanceX > viewBoxWidth ? distanceX : viewBoxWidth;
 		viewBoxHeight = distanceY > viewBoxHeight ? distanceY : viewBoxHeight;
 	});
-
-	console.log(` ${viewBoxWidth} ${viewBoxHeight}`);
 
 	return (
 		<TouchableOpacity activeOpacity={0.8} onPress={() => setShape(shape)}>

@@ -17,7 +17,7 @@ import {
 } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { getIntersectionOfPoints, getDistanceBetweenPoints, deepCopy } from './utils';
+import { getIntersectionOfPoints, getDistanceBetweenPoints, deepCopy, getInLinePoints } from './utils';
 import MiniShapeList from './MiniShapeList';
 import { Shape } from './Shape';
 import { Line } from './Line';
@@ -30,7 +30,7 @@ export const storeContext = createContext<typeof stores>(stores);
 const AnimatedLine = Animated.createAnimatedComponent(SVGLine);
 
 const SNOW_SNAP_POINTS = false;
-const SHOW_LINE_ID = false;
+const SHOW_LINE_ID = true;
 
 const SNAP_DISTANCE = 20;
 const PARALLEL_SAFE_ZONE = 10;
@@ -121,10 +121,9 @@ const PolyMaker = observer(() => {
 		.flat();
 
 	const snapPoints = useMemo(() => {
-		// const inLinePoints: Array<Point> = lines.map(line => getInLinePoints(line)).flat();
+		const inLinePoints: Array<Point> = lines.map(line => getInLinePoints(line)).flat();
 
-		return [...startEndPoints, ...intersectionPoints];
-		// return [...startEndPoints, ...intersectionPoints, ...inLinePoints];
+		return [...startEndPoints, ...intersectionPoints, ...inLinePoints];
 	}, [lines, intersectionPoints]);
 
 	const removeParentLines = (lines: Array<Line>, intersectionPoints: Array<Point>) => {
@@ -176,7 +175,7 @@ const PolyMaker = observer(() => {
 		if (lines.length === 0) {
 			newLines.push(line);
 		}
-		lines.forEach(secondLine => {
+		lines.forEach(async secondLine => {
 			let newSegmentsLines: Array<Line> = [];
 			const point = getIntersectionOfPoints(
 				firstPointX,
@@ -197,18 +196,26 @@ const PolyMaker = observer(() => {
 				};
 
 				if (
-					(point.x === firstPointX && point.y === firstPointY) ||
-					(point.x === secondPointX && point.y === secondPointY)
+					(point.x === secondLine.startPoint.x && point.y === secondLine.startPoint.y) ||
+					(point.x === secondLine.endPoint.x && point.y === secondLine.endPoint.y)
 				) {
 					newLines.push(line);
 				} else {
-					newSegmentsLines.push(new Line(line.startPoint, newPoint, line.id));
-					newSegmentsLines.push(new Line(line.endPoint, newPoint, line.id));
+					const isNewPointInLine = secondLine.isPointInLine(newPoint) && !line.isPointInLine(newPoint);
+
+					if (!isNewPointInLine) {
+						newSegmentsLines.push(new Line(line.startPoint, newPoint, line.id));
+						newSegmentsLines.push(new Line(line.endPoint, newPoint, line.id));
+					} else {
+						newLines.push(line);
+					}
 					newSegmentsLines.push(new Line(secondLine.startPoint, newPoint, secondLine.id));
 					newSegmentsLines.push(new Line(secondLine.endPoint, newPoint, secondLine.id));
+
 					if (newSegmentsLines.length > 0) {
 						newPoint.associateLine = {};
-						newSegmentsLines.map(newLine => (newPoint.associateLine[newLine.id] = true));
+						newSegmentsLines.forEach(newLine => (newPoint.associateLine[newLine.id] = true));
+						if (isNewPointInLine) newPoint.associateLine[line.id] = true;
 						newLines.push(...newSegmentsLines);
 					}
 				}

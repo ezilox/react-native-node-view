@@ -1,5 +1,6 @@
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import { Line } from './Line';
 
 const DIVISION_COUNT = 2;
 
@@ -57,16 +58,22 @@ export const getInLinePoints = (line: Line, divisionCount = DIVISION_COUNT) => {
 	const points: Array<Point> = Array(divisionCount - 1)
 		.fill(null)
 		.map((value, index) => {
-			const xDiff = line.x2 - line.x1;
-			const yDiff = line.y2 - line.y1;
+			const xDiff = line.endPoint.x - line.startPoint.x;
+			const yDiff = line.endPoint.y - line.startPoint.y;
 
 			return {
-				x: line.x1 + ((index + 1) / divisionCount) * xDiff,
-				y: line.y1 + ((index + 1) / divisionCount) * yDiff,
-				associateLine: [line.id],
+				x: line.startPoint.x + ((index + 1) / divisionCount) * xDiff,
+				y: line.startPoint.y + ((index + 1) / divisionCount) * yDiff,
+				associateLine: { [line.id]: true },
 				id: uuidv4(),
 			};
 		});
 
 	return points;
+};
+
+export const isPointOnLine = (point: Point, line: Line) => {
+	const firstDistance = getDistanceBetweenPoints(point.x, point.y, line.startPoint.x, line.startPoint.y);
+	const secondDistance = getDistanceBetweenPoints(point.x, point.y, line.endPoint.x, line.endPoint.y);
+	return firstDistance + secondDistance === line.length;
 };
