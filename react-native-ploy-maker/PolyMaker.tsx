@@ -61,7 +61,7 @@ const PolyMaker = observer(() => {
 
 		for (let index = 0; index < intersectionPoints.length; index++) {
 			const point = intersectionPoints[index];
-			await findShapes(point, point, [], shapes);
+			await findShapes(point, point, [], [], shapes);
 		}
 
 		setShapes(shapes);
@@ -81,6 +81,7 @@ const PolyMaker = observer(() => {
 		startPoint: Point,
 		point: Point,
 		shapeLines: Array<Line> = [],
+		pointsPath: Array<Point> = [],
 		shapes: Array<Shape> = []
 	) => {
 		const linesToGo = Object.keys(point.associateLine).filter(lineId => !shapeLines.some(line => line.id === lineId));
@@ -89,7 +90,10 @@ const PolyMaker = observer(() => {
 			const lineId = linesToGo[i];
 
 			const goToPoints = intersectionPoints.filter(
-				goToPoint => goToPoint.associateLine[lineId] && goToPoint.id !== point.id
+				goToPoint =>
+					goToPoint.associateLine[lineId] &&
+					goToPoint.id !== point.id &&
+					!pointsPath.some(point => point.id === goToPoint.id)
 			);
 
 			for (let j = 0; j < goToPoints.length; j++) {
@@ -97,9 +101,11 @@ const PolyMaker = observer(() => {
 				const line = lines.find(line => line.id === lineId);
 				if (line) {
 					shapeLines.push(line);
+					pointsPath.push(goToPoint);
 
-					await findShapes(startPoint, goToPoint, shapeLines, shapes);
+					await findShapes(startPoint, goToPoint, shapeLines, pointsPath, shapes);
 					shapeLines.pop();
+					pointsPath.pop();
 				}
 			}
 		}
