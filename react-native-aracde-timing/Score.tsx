@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, TextProps } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
+import { View, Text, Animated, TextProps, FlatList, ListRenderItem } from 'react-native';
+// import { FlatList } from 'react-native-gesture-handler';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
@@ -18,7 +18,12 @@ const Score: React.FC<Props> = ({ score }) => {
 	);
 };
 
-const numbers = [
+interface ScrollNumber {
+	id: string;
+	value: number;
+}
+
+const numbers: Array<ScrollNumber> = [
 	{ id: '0', value: 0 },
 	{ id: '1', value: 1 },
 	{ id: '2', value: 2 },
@@ -43,7 +48,7 @@ const ScoreNumber: React.FC<ScoreNumberProps> = ({ number }) => {
 		useNativeDriver: true,
 	});
 
-	const renderItem = ({ item, index }: any) => (
+	const renderItem: ListRenderItem<ScrollNumber> = ({ item, index }) => (
 		<TextScroll index={index} number={item.value} scrollValue={scrollValue} style={{ fontSize: 24 }} />
 	);
 
@@ -55,7 +60,7 @@ const ScoreNumber: React.FC<ScoreNumberProps> = ({ number }) => {
 
 	return (
 		<View>
-			<AnimatedFlatList
+			<FlatList
 				ref={flatlistRef}
 				onScroll={onScrollAnim}
 				scrollEnabled={false}
