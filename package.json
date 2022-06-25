@@ -21,6 +21,7 @@
     "react-native-gesture-handler": "~2.1.0",
     "react-native-get-random-values": "^1.7.2",
     "react-native-reanimated": "~2.3.1",
+    "react-native-safe-area-context": "^4.2.5",
     "react-native-svg": "12.1.1",
     "react-native-web": "0.17.1",
     "svg-path-properties": "^1.0.11",

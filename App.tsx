@@ -1,28 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, Button, Alert, Modal } from 'react-native';
-import NodeView from './React-Native-Node-View/index';
-import Carousel, { Props } from './react-native-carousel/index';
-import Bubbles from './react-native-bubbles/index';
+import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets, SafeAreaProvider } from 'react-native-safe-area-context';
+import WatchScroll from './react-native-apple-watch-scroll';
+// import NodeView from './React-Native-Node-View/index';
+// import Carousel, { Props } from './react-native-carousel/index';
+// import Bubbles from './react-native-bubbles/index';
 // import ShapeMaker from './react-native-map-maker/components/ShapeMaker';
 // import Shape from './react-native-map-maker/components/Shape';
 // import Map from './react-native-map-maker/components/Map';
 // import MapMaker from './react-native-map-maker/index';
 // import { NavigationContainer } from '@react-navigation/native';
 // import { createStackNavigator } from '@react-navigation/stack';
-// import ArcadeGame from './react-native-aracde-timing/index';
+import ArcadeGame from './react-native-aracde-timing/index';
 // import DrawGraph from './react-native-draw-graph/index';
 // import DrawColumnGraph from './react-native-draw-column-graph/index';
 // import FluidLoader from './react-native-fluid-loader';
 // import StepCounter from './react-native-step-counter';
 // import ViewBounce from './react-native-view-bounce';
 // import BorderSnake from './react-native-border-snake';
-import TilesGame from './react-native-tiles-game';
-import FlatListSearch from './react-native-flatlist-search';
-import { AnimatedStyleUpdateExample } from './react-native-flatlist-search/test';
-import SlideButton from './react-native-slide-button';
-import PolyMaker from './react-native-ploy-maker/PolyMaker';
-import ImageResize from './react-native-image-resize/ImageResize';
-import Score from './react-native-aracde-timing/Score';
+// import TilesGame from './react-native-tiles-game';
+// import FlatListSearch from './react-native-flatlist-search';
+// import { AnimatedStyleUpdateExample } from './react-native-flatlist-search/test';
+// import SlideButton from './react-native-slide-button';
+// // import PolyMaker from './react-native-ploy-maker/PolyMaker';
+// import ImageResize from './react-native-image-resize/ImageResize';
+// import Score from './react-native-aracde-timing/Score';
 
 // const data: Props['cards'] = [
 // 	{
@@ -206,19 +208,25 @@ export default function App() {
 		{ x: 390, y: 220 },
 	];
 	// return <ImageResize uri="https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg" />;
-  return <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}><Score score={43219}/></View>
-	return <PolyMaker />;
 	return (
-		<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-			<SlideButton onPress={() => console.log('Button Press')} />
-		</View>
+		<SafeAreaProvider>
+			<WatchScroll />
+		</SafeAreaProvider>
 	);
-	return <AnimatedStyleUpdateExample />;
-	return (
-		<View style={{ marginTop: 100 }}>
-			<FlatListSearch data={[]} renderItem={({ item }) => <View />} />
-		</View>
-	);
+	// return <ArcadeGame />
+	// return <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}><Score score={43219}/></View>
+	// return <PolyMaker />;
+	// return (
+	// 	<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+	// 		<SlideButton onPress={() => console.log('Button Press')} />
+	// 	</View>
+	// );
+	// return <AnimatedStyleUpdateExample />;
+	// return (
+	// 	<View style={{ marginTop: 100 }}>
+	// 		<FlatListSearch data={[]} renderItem={({ item }) => <View />} />
+	// 	</View>
+	// );
 	const images = Array(20)
 		.fill(null)
 		.map((v, i) => ({ imageUri: 'https://upload.wikimedia.org/wikipedia/en/7/77/EricCartman.png', key: i }));
