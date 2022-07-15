@@ -12,13 +12,14 @@ import WatchScroll from './react-native-apple-watch-scroll';
 // import { NavigationContainer } from '@react-navigation/native';
 // import { createStackNavigator } from '@react-navigation/stack';
 import ArcadeGame from './react-native-aracde-timing/index';
+import ScrollInfinite from './react-native-infinite-scroll';
 // import DrawGraph from './react-native-draw-graph/index';
 // import DrawColumnGraph from './react-native-draw-column-graph/index';
 // import FluidLoader from './react-native-fluid-loader';
 // import StepCounter from './react-native-step-counter';
 // import ViewBounce from './react-native-view-bounce';
 // import BorderSnake from './react-native-border-snake';
-// import TilesGame from './react-native-tiles-game';
+import TilesGame from './react-native-tiles-game';
 // import FlatListSearch from './react-native-flatlist-search';
 // import { AnimatedStyleUpdateExample } from './react-native-flatlist-search/test';
 // import SlideButton from './react-native-slide-button';
@@ -208,9 +209,13 @@ export default function App() {
 		{ x: 390, y: 220 },
 	];
 	// return <ImageResize uri="https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg" />;
+  
+  return <TilesGame/>
+
 	return (
 		<SafeAreaProvider>
-			<WatchScroll />
+			{/* <WatchScroll /> */}
+      <ScrollInfinite/>
 		</SafeAreaProvider>
 	);
 	// return <ArcadeGame />
