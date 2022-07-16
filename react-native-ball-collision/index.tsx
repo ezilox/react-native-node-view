@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Dimensions, Alert } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
+import Score from './Score';
 import { Ball, BALL_SIZE } from './Ball';
 import { OBSTACLE_SIZE, ObstacleMemo } from './Obstacle';
 
@@ -14,13 +15,16 @@ export enum GameStatus {
 const Index: React.FC = () => {
 	const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.start);
 	const [hadCollision, setHadCollision] = useState(false);
+	const [score, setScore] = useState(0);
 
 	const ballAbsoluteX = useSharedValue(SCREEN_WIDTH / 2 - BALL_SIZE / 2);
 	const ballAbsoluteY = useSharedValue(SCREEN_HEIGHT / 2 - BALL_SIZE / 2);
 
 	useEffect(() => {
 		if (gameStatus === GameStatus.end) {
-			Alert.alert('HIT!', '', [{ text: 'Play Again?', onPress: resetGame }]);
+			Alert.alert('HIT!', `Your score is ${score.toLocaleString('en-US', { maximumFractionDigits: 0 })}`, [
+				{ text: 'Play Again?', onPress: resetGame },
+			]);
 		}
 	}, [gameStatus]);
 
@@ -55,6 +59,7 @@ const Index: React.FC = () => {
 
 	return (
 		<View style={{ flex: 1 }}>
+			<Score setScore={setScore} score={score} gameStatus={gameStatus} />
 			<Ball size={BALL_SIZE} absoluteX={ballAbsoluteX} absoluteY={ballAbsoluteY} />
 			{obstacles}
 		</View>
