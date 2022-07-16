@@ -26,7 +26,8 @@
     "react-native-svg": "12.1.1",
     "react-native-web": "0.17.1",
     "svg-path-properties": "^1.0.11",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "expo-updates": "~0.11.7"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

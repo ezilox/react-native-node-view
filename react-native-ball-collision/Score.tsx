@@ -6,15 +6,14 @@ import { OBSTACLE_SPAWN_TIMEOUT } from './Obstacle';
 interface IScore {
 	gameStatus: GameStatus;
 	score: number;
-	setScore: (score: number) => void
+	setScore: (score: number) => void;
 }
 
 const Score: React.FC<IScore> = ({ gameStatus, score, setScore }) => {
-	
 	const timeoutRef = useRef<NodeJS.Timeout>();
 
 	const calculateScore = () => {
-		return score === 0 ? 2 : score + 2 * (score / 10);
+		return score === 0 ? 2 : score + 2;
 	};
 
 	useEffect(() => {
@@ -30,7 +29,9 @@ const Score: React.FC<IScore> = ({ gameStatus, score, setScore }) => {
 	}, [score, gameStatus]);
 	return (
 		<View style={{ paddingTop: 40, alignItems: 'center', justifyContent: 'center' }}>
-			<Text style={{ fontSize: 20, color: 'white' }}>{score.toLocaleString('en-US', { maximumFractionDigits: 0 })}</Text>
+			<Text style={{ fontSize: 20, color: 'white' }}>
+				{score.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+			</Text>
 			<Text style={{ color: 'lightgray', fontSize: 14 }}>Score</Text>
 		</View>
 	);

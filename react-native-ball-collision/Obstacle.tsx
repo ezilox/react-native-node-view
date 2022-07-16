@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, ViewStyle, Image } from 'react-native';
 import Animated, {
 	cancelAnimation,
+	Easing,
 	runOnJS,
 	SharedValue,
 	useAnimatedStyle,
@@ -56,7 +57,9 @@ export const Obstacle: React.FC<IObstacle> = ({
 	gameStatus,
 }) => {
 	const [isSpawned, setIsSpawned] = useState(false);
+	const [isCollidable, setIsCollidable] = useState(false);
 	const timeoutRef = useRef<NodeJS.Timeout>();
+	const timeoutCollidableRef = useRef<NodeJS.Timeout>();
 	const { startX, endX } = useMemo(() => getObstacleRandomX(), [gameStatus]);
 	const { startY, endY } = useMemo(() => getObstacleRandomY(), [gameStatus]);
 
@@ -68,13 +71,17 @@ export const Obstacle: React.FC<IObstacle> = ({
 	const spawnAnimValue = useSharedValue(0);
 
 	const spawnAnimation = () => {
-		spawnAnimValue.value = withSpring(1);
+		spawnAnimValue.value = withTiming(1, {duration: OBSTACLE_SPAWN_TIMEOUT, easing: Easing.bounce});
 	};
 
 	const startSpawnCountdown = () => {
 		timeoutRef.current = setTimeout(() => {
 			setIsSpawned(true);
 		}, index * OBSTACLE_SPAWN_TIMEOUT);
+
+		timeoutCollidableRef.current = setTimeout(() => {
+			setIsCollidable(true);
+		}, index * OBSTACLE_SPAWN_TIMEOUT + OBSTACLE_SPAWN_TIMEOUT);
 	};
 
 	useEffect(() => {
@@ -83,7 +90,9 @@ export const Obstacle: React.FC<IObstacle> = ({
 		} else if (gameStatus === GameStatus.end) {
 			stopAnimation();
 			timeoutRef.current && clearTimeout(timeoutRef.current);
+			timeoutCollidableRef.current && clearTimeout(timeoutCollidableRef.current);
 			setIsSpawned(false);
+			setIsCollidable(false);
 		}
 	}, [gameStatus]);
 
@@ -129,7 +138,7 @@ export const Obstacle: React.FC<IObstacle> = ({
 	};
 
 	useDerivedValue(() => {
-		if (!isSpawned || gameStatus === GameStatus.end) {
+		if (!isSpawned || gameStatus === GameStatus.end || !isCollidable) {
 			return;
 		}
 		const ballPositionX = parseInt((ballAbsoluteX.value + BALL_SIZE / 2).toFixed(0));
