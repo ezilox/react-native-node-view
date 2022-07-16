@@ -26,6 +26,7 @@ import TilesGame from './react-native-tiles-game';
 // // import PolyMaker from './react-native-ploy-maker/PolyMaker';
 // import ImageResize from './react-native-image-resize/ImageResize';
 // import Score from './react-native-aracde-timing/Score';
+import Game from './react-native-ball-collision';
 
 // const data: Props['cards'] = [
 // 	{
@@ -187,7 +188,7 @@ export default function App() {
 
 	// tempNodes.map(group => group.nodes.sort(nodeA => !linesIds.includes(nodeA.id)));
 	// console.log('linesIds', linesIds);
-	console.log('hererer');
+
 	const points = [
 		{ x: 0, y: 30 },
 		{ x: 20, y: -100 },
@@ -209,13 +210,14 @@ export default function App() {
 		{ x: 390, y: 220 },
 	];
 	// return <ImageResize uri="https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg" />;
-  
-  return <TilesGame/>
+
+	return <Game />;
+	return <TilesGame />;
 
 	return (
 		<SafeAreaProvider>
 			{/* <WatchScroll /> */}
-      <ScrollInfinite/>
+			<ScrollInfinite />
 		</SafeAreaProvider>
 	);
 	// return <ArcadeGame />
