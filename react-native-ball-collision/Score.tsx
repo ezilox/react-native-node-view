@@ -30,7 +30,7 @@ const Score: React.FC<IScore> = ({ gameStatus, score, setScore }) => {
 	}, [score, gameStatus]);
 	return (
 		<View style={{ paddingTop: 40, alignItems: 'center', justifyContent: 'center' }}>
-			<Text style={{ fontSize: 18 }}>{score.toLocaleString('en-US', { maximumFractionDigits: 0 })}</Text>
+			<Text style={{ fontSize: 20, color: 'white' }}>{score.toLocaleString('en-US', { maximumFractionDigits: 0 })}</Text>
 			<Text style={{ color: 'lightgray', fontSize: 14 }}>Score</Text>
 		</View>
 	);

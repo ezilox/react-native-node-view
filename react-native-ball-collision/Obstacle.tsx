@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, ViewStyle } from 'react-native';
+import { Dimensions, ViewStyle, Image } from 'react-native';
 import Animated, {
 	cancelAnimation,
 	runOnJS,
@@ -15,6 +15,7 @@ import Animated, {
 import { GameStatus } from '.';
 import { BALL_SIZE } from './Ball';
 import { getDistanceBetweenPoints, getRandomValueBetweenRange } from './utils';
+import ObstacleImage from './assets/mine.png';
 
 export const OBSTACLE_SIZE = 30;
 export const OBSTACLE_SPAWN_TIMEOUT = 3000;
@@ -153,9 +154,10 @@ export const Obstacle: React.FC<IObstacle> = ({
 
 	return isSpawned ? (
 		<Animated.View
-			style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: 'red', position: 'absolute' }}
-			animatedProps={animatedStyle}
-		/>
+			style={{ width: size, height: size, borderRadius: size / 2, position: 'absolute' }}
+			animatedProps={animatedStyle}>
+			<Image style={{ width: '100%', height: '100%' }} source={ObstacleImage} />
+		</Animated.View>
 	) : null;
 };
 
