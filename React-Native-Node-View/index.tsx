@@ -451,8 +451,15 @@ interface IDeleteNodeButton {
 const DeleteNodeButton = ({ deleteMode, onDeleteNode, nodeId, viewStyle, lineViewStyle }: IDeleteNodeButton) => {
 	const position = -5;
 	const scaleAnim = useRef(new Animated.Value(0)).current;
+	const deleteModePrevious = usePrevious(deleteMode);
+	
 	useEffect(() => {
-		deleteMode ? scaleUp() : scaleDown();
+		if (deleteModePrevious && !deleteMode) {
+			scaleDown();
+		}
+		if (deleteMode) {
+			scaleUp();
+		}
 	}, [deleteMode]);
 
 	const scaleUp = () => {
@@ -496,5 +503,18 @@ const DeleteNodeButton = ({ deleteMode, onDeleteNode, nodeId, viewStyle, lineVie
 		</TapGestureHandler>
 	);
 };
+
+// Hook
+function usePrevious<T>(value: T): T {
+  // The ref object is a generic container whose current property is mutable ...
+  // ... and can hold any value, similar to an instance property on a class
+  const ref: any = useRef<T>();
+  // Store current value in ref
+  useEffect(() => {
+    ref.current = value;
+  }, [value]); // Only re-run if value changes
+  // Return previous value (happens before update in useEffect above)
+  return ref.current;
+}
 
 export default NodeView;
