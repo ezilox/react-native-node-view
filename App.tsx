@@ -27,7 +27,8 @@ import TilesGame from './react-native-tiles-game';
 // import ImageResize from './react-native-image-resize/ImageResize';
 // import Score from './react-native-aracde-timing/Score';
 // import Game from './react-native-ball-collision';
-import Noise from './react-native-noise/Index';
+// import Noise from './react-native-noise/Index';
+import CircleHover from './react-native-soccer-kick/Index';
 
 // const data: Props['cards'] = [
 // 	{
@@ -212,9 +213,46 @@ export default function App() {
 	];
 	// return <ImageResize uri="https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg" />;
 
-	return <Noise />;
-	return <Game />;
-	return <TilesGame />;
+	return (
+		<SafeAreaProvider>
+			<View style={{ flex: 1, backgroundColor: 'darkgreen' }}>
+			<CircleHover />
+				{/* <Text>
+					Exercitation consectetur sunt laborum ex ut Lorem quis laboris adipisicing consequat laborum. Adipisicing
+					laborum dolor esse laboris duis tempor occaecat cillum sit ea consequat. Adipisicing exercitation laborum est
+					quis id. Enim aliqua sunt ut labore id sint cupidatat aliquip. Excepteur aliquip labore sunt cillum pariatur
+					reprehenderit. Amet sit nisi aliquip labore laborum. Non non nostrud duis dolore nulla nostrud fugiat ullamco.
+					Quis excepteur velit irure labore nostrud dolor anim magna culpa. Proident magna aliqua aliquip officia anim.
+					Ut qui proident laboris Lorem officia pariatur deserunt dolor fugiat exercitation ex culpa. Magna quis est
+					eiusmod dolore eiusmod amet. Ut adipisicing cupidatat incididunt ipsum dolore est occaecat labore incididunt
+					exercitation in occaecat. Sit officia est anim tempor minim. Occaecat sit et aute eu. Proident aute est
+					deserunt cupidatat nostrud. Ex id nisi ut qui esse eu ullamco et cupidatat aute. Elit culpa sit esse ex quis
+					aute cupidatat amet voluptate elit. Labore ex duis irure tempor qui ad irure culpa officia eiusmod. Ex nulla
+					in do velit pariatur consectetur labore elit magna incididunt ea. Officia quis nisi in ea commodo consectetur
+					id consequat duis. Ex duis cupidatat dolore exercitation mollit non est est pariatur consectetur ipsum veniam
+					in id. Deserunt enim excepteur est elit incididunt magna dolor aliqua. Commodo excepteur fugiat mollit magna
+					aliqua fugiat. Culpa quis ad ad qui laboris esse dolore enim mollit magna. Id consectetur officia ullamco
+					velit anim elit culpa. Mollit consectetur aliquip eiusmod consequat cupidatat veniam occaecat velit minim ea.
+					Amet laborum dolor sunt ea. Culpa qui deserunt eu ad anim irure quis laboris mollit sit ad sit cillum do.
+					Mollit culpa qui ex est eiusmod minim reprehenderit non. Laborum id excepteur cillum labore commodo voluptate
+					qui. Proident tempor qui exercitation id irure in. Amet mollit tempor culpa nostrud eu est ea. Ea ut non
+					exercitation aute laborum excepteur. Voluptate enim id eiusmod fugiat qui dolore. Consequat magna do elit
+					incididunt quis mollit sint eiusmod. Lorem nisi anim deserunt in duis sunt non ipsum magna. Eu duis ad culpa
+					minim nulla qui eiusmod sint enim qui labore. Ut adipisicing adipisicing elit nulla ad. Commodo cupidatat
+					velit consectetur tempor adipisicing qui nostrud est. Dolore aliquip nisi consequat amet in deserunt quis. Ut
+					eu do anim fugiat anim enim mollit consequat commodo eiusmod cupidatat ipsum est laboris. Ea pariatur labore
+					voluptate aliqua in est dolor culpa. Eu esse exercitation consequat deserunt. Laboris nisi veniam consectetur
+					sint quis. Sint labore consectetur exercitation commodo voluptate exercitation. Non tempor officia in labore
+					eiusmod. Culpa culpa tempor excepteur id Lorem in magna. Qui veniam veniam aute in velit et quis reprehenderit
+					consectetur.
+				</Text> */}
+				
+			</View>
+		</SafeAreaProvider>
+	);
+	// return <Noise />;
+	// return <Game />;
+	// return <TilesGame />;
 
 	return (
 		<SafeAreaProvider>
